@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Connecting…</title>
+<style>
+  body { margin: 0; background: #0a0a0b; color: #fff;
+    font-family: -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .msg { text-align: center; opacity: 0.6; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="msg" id="msg">Loading…</div>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const code  = params.get('code');
+  const error = params.get('error');
+
+  if (code) {
+    localStorage.setItem('gfit_pending_code', code);
+    document.getElementById('msg').textContent = 'Connected! Redirecting…';
+    window.location.href = '/fitbit';
+  } else if (error) {
+    localStorage.setItem('gfit_oauth_error', error);
+    window.location.href = '/fitbit';
+  } else {
+    document.getElementById('msg').textContent = 'Page not found.';
+  }
+</script>
+</body>
+</html>

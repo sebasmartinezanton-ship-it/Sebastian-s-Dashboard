@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0b">
+<title>Fitbit · Sleep · Activity · Health</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+:root {
+  --bg: #0a0a0b;
+  --bg-card: #111113;
+  --text-1: #ffffff;
+  --text-2: rgba(255,255,255,0.6);
+  --text-3: rgba(255,255,255,0.4);
+  --text-4: rgba(255,255,255,0.25);
+  --border: rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.14);
+  --accent: #00B0B9;
+  --accent-hi: #00C8D2;
+  --accent-glow: rgba(0,176,185,0.35);
+  --good: #6ee7b7;
+  --warn: #fbbf24;
+  --bad: #ff8a8a;
+  --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SF Mono, Menlo, Consolas, monospace;
+  --glass-shadow: 0 1px 0 0 rgba(255,255,255,0.06) inset, 0 12px 40px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.25);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, #0d1214 0%, #0a0a0b 60%);
+  color: var(--text-1);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%; max-width: 100vw;
+}
+.fb-shell {
+  width: 100%; max-width: min(720px, 100vw);
+  margin: 0 auto;
+  padding: 18px 16px calc(40px + 80px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+.fb-shell *, .tabbar * { min-width: 0; }
+img, video, canvas, svg { max-width: 100%; }
+
+/* ---------- Bottom tab bar ---------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  display: flex; justify-content: center;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(10,10,11,0) 0%, rgba(10,10,11,0.78) 38%, rgba(10,10,11,0.94) 100%);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  pointer-events: none;
+}
+.tabbar-inner {
+  pointer-events: auto;
+  display: flex; width: 100%; max-width: 520px; gap: 4px;
+  padding: 5px;
+  background: rgba(20,20,22,0.72);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.55);
+}
+.tab {
+  flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center;
+  gap: 5px; padding: 11px 6px; border-radius: 13px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--text-2); text-decoration: none;
+  background: transparent; border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab:hover { color: var(--text-1); }
+.tab[aria-current="page"] {
+  color: var(--accent-hi);
+  background: rgba(0,176,185,0.08);
+  border-color: rgba(0,176,185,0.20);
+}
+.tab-icon { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tab-icon svg { width: 100%; height: 100%; display: block; }
+.tab-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+@media (max-width: 480px) {
+  .tab { padding: 10px 4px; gap: 3px; }
+  .tab-label { font-size: 10px; letter-spacing: 0; }
+  .tab-icon { width: 14px; height: 14px; }
+  .tabbar { padding-left: 8px; padding-right: 8px; }
+  .tabbar-inner { max-width: 100%; }
+}
+@media (max-width: 380px) {
+  .tab-label { display: none; }
+  .tab { padding: 14px 6px; }
+}
+
+/* ---------- Setup overlay ---------- */
+#setupOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(5,5,6,0.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  display: none; align-items: center; justify-content: center;
+  padding: 24px;
+}
+#setupOverlay.is-visible { display: flex; }
+#setupOverlay .setup-card {
+  max-width: 560px; width: 100%;
+  background: rgba(14,16,17,0.97);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 22px; padding: 28px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+}
+#setupOverlay h2 {
+  font-size: 26px; font-weight: 700; letter-spacing: -0.03em;
+  margin: 0 0 6px; color: var(--text-1);
+}
+#setupOverlay h2 span { color: var(--accent-hi); }
+#setupOverlay .sub { color: var(--text-2); font-size: 13px; margin-bottom: 16px; line-height: 1.55; }
+#setupOverlay ol { padding-left: 18px; margin: 12px 0 18px; }
+#setupOverlay li { font-size: 13px; color: var(--text-2); margin-bottom: 6px; line-height: 1.5; }
+#setupOverlay li code { background: rgba(0,176,185,0.08); padding: 1px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 11.5px; color: var(--accent-hi); }
+#setupOverlay .redirect-box {
+  background: rgba(0,176,185,0.06); border: 1px solid rgba(0,176,185,0.20);
+  border-radius: 8px; padding: 9px 12px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--accent-hi);
+  margin: 10px 0 16px; word-break: break-all;
+}
+#setupOverlay label { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--text-3); text-transform: uppercase; margin: 14px 0 6px; font-weight: 700; }
+#setupOverlay input {
+  width: 100%; box-sizing: border-box; padding: 11px 13px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px; color: var(--text-1); font: inherit; font-size: 13px;
+  font-family: var(--font-mono); outline: none;
+}
+#setupOverlay input:focus { border-color: var(--accent); }
+#setupOverlay .actions { display: flex; gap: 10px; margin-top: 22px; }
+#setupOverlay button {
+  flex: 1; padding: 12px 18px; border-radius: 10px;
+  background: rgba(0,176,185,0.15); border: 1px solid rgba(0,176,185,0.40);
+  color: var(--accent-hi); font: inherit; font-weight: 700; font-size: 13px;
+  cursor: pointer; transition: background 0.2s, transform 0.15s; letter-spacing: 0.04em;
+}
+#setupOverlay button:hover { background: rgba(0,176,185,0.28); }
+#setupOverlay button:active { transform: scale(0.98); }
+#setupOverlay button.secondary { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.10); color: var(--text-2); }
+.config-btn {
+  position: fixed; top: 14px; right: 14px; z-index: 100;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(14,16,17,0.85); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  transition: background 0.2s, transform 0.2s;
+}
+.config-btn:hover { background: rgba(30,32,34,0.95); transform: scale(1.05); color: var(--text-1); }
+
+/* ---------- Section title ---------- */
+.section-title {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.03em;
+  margin: 0 0 14px; color: var(--text-1);
+}
+
+/* ---------- Fitbit card ---------- */
+.fb-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 22px 22px 18px;
+  box-shadow: var(--glass-shadow);
+  transition: box-shadow 0.3s;
+}
+.fb-card:hover {
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.08) inset, 0 18px 50px rgba(0,0,0,0.50);
+}
+
+/* ---- Brand ---- */
+.fb-brand { display: inline-flex; align-items: center; gap: 8px; }
+.fb-brand-mark {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: #0a0a0b;
+  font-weight: 900; font-size: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  letter-spacing: -0.04em; box-shadow: 0 0 12px var(--accent-glow);
+}
+.fb-brand-text { font-weight: 800; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-1); }
+
+/* ---- Disconnected ---- */
+.fb-disconnected {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 18px 8px 8px; gap: 6px;
+}
+.fb-disconnected .fb-brand { margin-bottom: 14px; }
+.fb-disconnected-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }
+.fb-disconnected-sub { font-size: 13px; color: var(--text-3); max-width: 280px; line-height: 1.5; margin-bottom: 18px; }
+.fb-connect-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border-radius: 999px;
+  border: 1px solid rgba(0,176,185,0.70);
+  background: linear-gradient(180deg, rgba(0,176,185,0.22) 0%, rgba(0,140,148,0.28) 100%);
+  color: var(--accent-hi); font-family: inherit; font-size: 13.5px;
+  font-weight: 700; cursor: pointer;
+  transition: transform 0.12s, background 0.18s;
+  box-shadow: 0 0 0 1px rgba(0,176,185,0.15) inset, 0 6px 20px rgba(0,0,0,0.40);
+}
+.fb-connect-btn:hover { background: linear-gradient(180deg, rgba(0,176,185,0.34) 0%, rgba(0,140,148,0.38) 100%); transform: translateY(-1px); }
+.fb-connect-btn:active { transform: scale(0.98); }
+.fb-auth-status { font-size: 11px; color: var(--text-3); margin-top: 12px; min-height: 14px; font-style: italic; }
+
+/* ---- Connected header ---- */
+.fb-header {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
+}
+.fb-live-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--accent-hi); margin-left: 4px;
+}
+.fb-live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-hi); box-shadow: 0 0 8px var(--accent-glow);
+  animation: fb-pulse 1.6s ease-in-out infinite;
+}
+@keyframes fb-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+.fb-header-right { display: flex; align-items: center; gap: 10px; }
+.fb-updated { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+.fb-refresh-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--border); background: rgba(255,255,255,0.04);
+  color: var(--text-2); cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.18s, color 0.18s, transform 0.12s; flex-shrink: 0;
+}
+.fb-refresh-btn:hover { background: rgba(255,255,255,0.10); color: var(--text-1); }
+.fb-refresh-btn:active { transform: rotate(180deg); }
+.fb-refresh-btn svg { display: block; }
+
+/* ---- Hero ring ---- */
+.fb-ring-wrap {
+  position: relative; width: 220px; max-width: 72%;
+  margin: 0 auto 24px; aspect-ratio: 1;
+}
+.fb-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.fb-ring-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 12; }
+.fb-ring-fill {
+  fill: none; stroke: var(--accent); stroke-width: 12; stroke-linecap: round;
+  stroke-dasharray: 603.19; stroke-dashoffset: 603.19;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1), stroke 0.4s, filter 0.4s;
+}
+.fb-ring-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.fb-ring-num { font-size: 58px; font-weight: 700; letter-spacing: -0.04em; color: var(--text-1); line-height: 1; font-variant-numeric: tabular-nums; }
+.fb-ring-unit { font-size: 10px; font-weight: 700; letter-spacing: 0.20em; text-transform: uppercase; color: var(--text-3); margin-top: 8px; }
+.fb-ring-label { font-size: 12px; font-weight: 600; margin-top: 5px; }
+
+/* ---- Sleep stages ---- */
+.fb-stages { margin-bottom: 22px; padding-top: 22px; border-top: 1px solid var(--border); }
+.fb-stages-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.fb-stages-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-3); }
+.fb-stages-meta { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+.fb-stages-bar {
+  display: flex; height: 10px; background: rgba(255,255,255,0.04);
+  border-radius: 999px; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border);
+}
+.fb-stage { height: 100%; transition: width 0.7s cubic-bezier(0.22,1,0.36,1); }
+.fb-stage-rem   { background: #00C8D2; }
+.fb-stage-deep  { background: #0087A0; }
+.fb-stage-light { background: #476B72; }
+.fb-stage-awake { background: #2a3a3c; }
+.fb-stages-legend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.fb-stages-leg { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-2); font-weight: 500; }
+.fb-stages-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.fb-stages-dot.d-rem   { background: #00C8D2; }
+.fb-stages-dot.d-deep  { background: #0087A0; }
+.fb-stages-dot.d-light { background: #476B72; }
+.fb-stages-dot.d-awake { background: #2a3a3c; border: 1px solid var(--border-strong); }
+.fb-stages-num { margin-left: auto; color: var(--text-1); font-weight: 700; font-family: var(--font-mono); font-size: 11px; }
+@media (max-width: 480px) { .fb-stages-legend { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---- Stats grid ---- */
+.fb-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 8px; padding-top: 22px; border-top: 1px solid var(--border);
+}
+.fb-stat {
+  position: relative;
+  background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 10px; text-align: center;
+  transition: background 0.18s, border-color 0.18s;
+}
+.fb-stat:hover { background: rgba(255,255,255,0.05); border-color: var(--border-strong); }
+.fb-stat-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; margin-bottom: 8px; }
+.fb-stat-value { font-size: 21px; font-weight: 700; color: var(--text-1); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+.fb-stat-sub { font-size: 10px; color: var(--text-3); margin-top: 5px; font-family: var(--font-mono); }
+@media (max-width: 480px) { .fb-stats { grid-template-columns: repeat(2, 1fr); } .fb-stat-value { font-size: 19px; } }
+
+/* ---- Biomarkers ---- */
+.fb-bio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.fb-bio-item {
+  position: relative; display: flex; flex-direction: column; gap: 4px;
+  padding: 11px 12px; background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border); border-radius: 12px; text-align: center;
+  transition: background 0.18s, border-color 0.18s;
+}
+.fb-bio-item:hover { background: rgba(255,255,255,0.05); border-color: var(--border-strong); }
+.fb-bio-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+.fb-bio-val { font-size: 14px; font-weight: 700; color: var(--text-1); font-variant-numeric: tabular-nums; }
+@media (max-width: 380px) { .fb-bio { grid-template-columns: 1fr; } }
+
+/* ---- Zone dots ---- */
+.fb-zone {
+  position: absolute; top: 9px; right: 9px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.10);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.fb-zone.z-good { background: #6ee7b7; box-shadow: 0 0 7px rgba(110,231,183,0.55); }
+.fb-zone.z-norm { background: rgba(255,255,255,0.28); }
+.fb-zone.z-warn { background: #fbbf24; box-shadow: 0 0 7px rgba(251,191,36,0.50); }
+.fb-zone.z-bad  { background: #ff8a8a; box-shadow: 0 0 7px rgba(255,138,138,0.50); }
+.fb-bio-item .fb-zone { top: 8px; right: 8px; }
+
+/* ---- Zone legend ---- */
+.fb-legend {
+  display: flex; justify-content: center; flex-wrap: wrap;
+  gap: 14px; margin-top: 14px; padding: 10px 12px;
+  background: rgba(255,255,255,0.02); border-radius: 999px; border: 1px solid var(--border);
+}
+.fb-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 600; color: var(--text-3); }
+.fb-legend-item .fb-zone { position: static; display: inline-block; }
+
+/* ---- Verdict ---- */
+.fb-verdict {
+  margin-top: 18px; padding: 16px 18px;
+  background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+  border-left: 2px solid rgba(0,176,185,0.45);
+  border-radius: 0 12px 12px 0;
+}
+.fb-verdict-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.fb-verdict-eyebrow { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 700; }
+.fb-verdict-badge { font-size: 9.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; letter-spacing: 0.14em; text-transform: uppercase; border: 1px solid; }
+.fb-verdict-headline { font-size: 15px; font-weight: 600; color: var(--text-1); line-height: 1.4; margin-bottom: 10px; letter-spacing: -0.01em; }
+.fb-verdict-reasons { font-size: 12.5px; color: var(--text-2); line-height: 1.65; }
+.fb-verdict-avoid { font-size: 12.5px; color: var(--text-2); line-height: 1.6; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.fb-verdict-avoid-label { color: #ff8a8a; font-weight: 700; }
+
+/* ---- Disconnect ---- */
+.fb-disconnect-btn {
+  display: block; margin: 16px auto 0; padding: 7px 14px;
+  background: transparent; border: 1px solid transparent;
+  color: var(--text-3); font-size: 11px; font-family: inherit;
+  font-weight: 500; border-radius: 999px; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.fb-disconnect-btn:hover { color: var(--text-2); border-color: var(--border-strong); }
+
+/* ---- Error banner ---- */
+.fb-error {
+  display: none; margin-bottom: 14px; padding: 10px 14px;
+  background: rgba(255,138,138,0.08); border: 1px solid rgba(255,138,138,0.28);
+  border-radius: 10px; color: #ff8a8a; font-size: 12px; line-height: 1.5;
+}
+.fb-error.is-visible { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Setup overlay -->
+<div id="setupOverlay">
+  <div class="setup-card">
+    <h2>Connect your <span>Fitbit</span>.</h2>
+    <div class="sub">Uses Google Fit API to read your Fitbit data (Fitbit syncs automatically to Google Fit on your phone). Requires a free Google Cloud project — takes about 5 minutes to set up.</div>
+    <ol>
+      <li>Go to <code>console.cloud.google.com</code> → create or select a project</li>
+      <li>Search for <code>Fitness API</code> → click Enable</li>
+      <li>Go to <code>APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID</code></li>
+      <li>Choose <code>Web application</code> — add the redirect URL shown below to <strong>Authorized redirect URIs</strong></li>
+      <li>Copy your <code>Client ID</code> and <code>Client Secret</code></li>
+      <li>In Netlify: add env vars <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>, <code>GOOGLE_REDIRECT_URI</code> → redeploy</li>
+      <li>Paste your Client ID and proxy URL below</li>
+    </ol>
+    <div class="sub" style="margin-bottom:4px">Your redirect URL — paste this into Google Cloud Console:</div>
+    <div class="redirect-box" id="redirectUriDisplay"></div>
+    <label>Google Client ID</label>
+    <input id="cfgClientId" type="text" placeholder="123456789-abc.apps.googleusercontent.com" autocomplete="off" />
+    <label>Backend proxy URL</label>
+    <input id="cfgProxyUrl" type="text" placeholder="https://your-site.netlify.app/.netlify/functions/fitbit-token" />
+    <div class="actions">
+      <button class="secondary" id="cfgSkipBtn" type="button">Skip for now</button>
+      <button id="cfgSaveBtn" type="button">Save &amp; continue</button>
+    </div>
+  </div>
+</div>
+
+<button class="config-btn" id="openCfgBtn" type="button" aria-label="Settings" title="Fitbit settings">
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+
+<div class="fb-shell">
+  <div class="section-title">Fitbit</div>
+
+  <div class="fb-card">
+
+    <!-- DISCONNECTED -->
+    <div id="fitbitDisconnected" class="fb-disconnected">
+      <div class="fb-brand">
+        <span class="fb-brand-mark">F</span>
+        <span class="fb-brand-text">FITBIT</span>
+      </div>
+      <div class="fb-disconnected-title">Not connected</div>
+      <div class="fb-disconnected-sub">Link your Google account to see live sleep, steps, and heart rate from your Fitbit.</div>
+      <button id="fitbitConnectBtn" class="fb-connect-btn" type="button">
+        Connect via Google
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 5 20 12 13 19"/></svg>
+      </button>
+      <div id="fitbitAuthStatus" class="fb-auth-status"></div>
+    </div>
+
+    <!-- CONNECTED -->
+    <div id="fitbitConnected" style="display:none">
+
+      <div class="fb-header">
+        <div class="fb-brand">
+          <span class="fb-brand-mark">F</span>
+          <span class="fb-brand-text">FITBIT</span>
+          <span class="fb-live-tag"><span class="fb-live-dot"></span>live</span>
+        </div>
+        <div class="fb-header-right">
+          <span id="fitbitUpdated" class="fb-updated">loading…</span>
+          <button id="fitbitRefreshBtn" class="fb-refresh-btn" title="Refresh" aria-label="Refresh">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 1 1 5.64 5.64L23 10"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="fitbitError" class="fb-error"></div>
+
+      <!-- Sleep score ring -->
+      <div class="fb-ring-wrap">
+        <svg class="fb-ring" viewBox="0 0 220 220" aria-hidden="true">
+          <circle class="fb-ring-track" cx="110" cy="110" r="96"/>
+          <circle class="fb-ring-fill" cx="110" cy="110" r="96" id="fitbitScoreRingFill"/>
+        </svg>
+        <div class="fb-ring-center">
+          <div id="fitbitScoreNum" class="fb-ring-num">—</div>
+          <div class="fb-ring-unit">sleep score</div>
+          <div id="fitbitScoreLabel" class="fb-ring-label">—</div>
+        </div>
+      </div>
+
+      <!-- Sleep stages -->
+      <div id="fitbitStages" class="fb-stages" style="display:none">
+        <div class="fb-stages-head">
+          <span class="fb-stages-eyebrow">Sleep stages</span>
+          <span class="fb-stages-meta" id="fitbitStagesMeta"></span>
+        </div>
+        <div class="fb-stages-bar">
+          <div class="fb-stage fb-stage-rem"   id="fitbitStageRem"   style="width:0%"></div>
+          <div class="fb-stage fb-stage-deep"  id="fitbitStageDeep"  style="width:0%"></div>
+          <div class="fb-stage fb-stage-light" id="fitbitStageLight" style="width:0%"></div>
+          <div class="fb-stage fb-stage-awake" id="fitbitStageAwake" style="width:0%"></div>
+        </div>
+        <div class="fb-stages-legend">
+          <div class="fb-stages-leg"><span class="fb-stages-dot d-rem"></span>REM <span id="fitbitStageRemTxt" class="fb-stages-num">—</span></div>
+          <div class="fb-stages-leg"><span class="fb-stages-dot d-deep"></span>Deep <span id="fitbitStageDeepTxt" class="fb-stages-num">—</span></div>
+          <div class="fb-stages-leg"><span class="fb-stages-dot d-light"></span>Light <span id="fitbitStageLightTxt" class="fb-stages-num">—</span></div>
+          <div class="fb-stages-leg"><span class="fb-stages-dot d-awake"></span>Awake <span id="fitbitStageAwakeTxt" class="fb-stages-num">—</span></div>
+        </div>
+      </div>
+
+      <!-- Stats grid -->
+      <div class="fb-stats">
+        <div class="fb-stat">
+          <span class="fb-zone" id="fbZoneSleep"></span>
+          <div class="fb-stat-label">Sleep</div>
+          <div class="fb-stat-value" id="fitbitSleepDuration">—</div>
+          <div class="fb-stat-sub" id="fitbitSleepEff">—</div>
+        </div>
+        <div class="fb-stat">
+          <span class="fb-zone" id="fbZoneSteps"></span>
+          <div class="fb-stat-label">Steps</div>
+          <div class="fb-stat-value" id="fitbitSteps">—</div>
+          <div class="fb-stat-sub">today</div>
+        </div>
+        <div class="fb-stat">
+          <span class="fb-zone" id="fbZoneHr"></span>
+          <div class="fb-stat-label">Resting HR</div>
+          <div class="fb-stat-value" id="fitbitRhr">—</div>
+          <div class="fb-stat-sub">bpm</div>
+        </div>
+        <div class="fb-stat">
+          <span class="fb-zone" id="fbZoneAzm"></span>
+          <div class="fb-stat-label">Active Min</div>
+          <div class="fb-stat-value" id="fitbitAzm">—</div>
+          <div class="fb-stat-sub">today</div>
+        </div>
+      </div>
+
+      <!-- Biomarkers -->
+      <div id="fitbitBio" class="fb-bio" style="display:none">
+        <div class="fb-bio-item">
+          <span class="fb-zone" id="fbZoneCals"></span>
+          <span class="fb-bio-label">Calories</span>
+          <span class="fb-bio-val" id="fitbitCals">—</span>
+        </div>
+        <div class="fb-bio-item">
+          <span class="fb-zone" id="fbZoneDist"></span>
+          <span class="fb-bio-label">Distance</span>
+          <span class="fb-bio-val" id="fitbitDist">—</span>
+        </div>
+        <div class="fb-bio-item">
+          <span class="fb-zone" id="fbZoneAvgHr"></span>
+          <span class="fb-bio-label">Avg HR</span>
+          <span class="fb-bio-val" id="fitbitAvgHr">—</span>
+        </div>
+      </div>
+
+      <!-- Zone legend -->
+      <div class="fb-legend">
+        <span class="fb-legend-item"><span class="fb-zone z-good"></span>Great</span>
+        <span class="fb-legend-item"><span class="fb-zone z-norm"></span>Normal</span>
+        <span class="fb-legend-item"><span class="fb-zone z-warn"></span>Watch</span>
+        <span class="fb-legend-item"><span class="fb-zone z-bad"></span>Low / High</span>
+      </div>
+
+      <!-- Verdict -->
+      <div id="fitbitVerdict" class="fb-verdict" style="display:none">
+        <div class="fb-verdict-head">
+          <span class="fb-verdict-eyebrow">Today's call</span>
+          <span id="fitbitVerdictBadge" class="fb-verdict-badge"></span>
+        </div>
+        <div id="fitbitVerdictHeadline" class="fb-verdict-headline"></div>
+        <div id="fitbitVerdictReasons" class="fb-verdict-reasons"></div>
+        <div id="fitbitVerdictAvoid" class="fb-verdict-avoid" style="display:none">
+          <span class="fb-verdict-avoid-label">Avoid today: </span><span id="fitbitVerdictAvoidText"></span>
+        </div>
+      </div>
+
+      <button id="fitbitDisconnectBtn" class="fb-disconnect-btn" type="button">Disconnect</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="topbar.js" defer></script>
+<nav class="tabbar" role="navigation" aria-label="Main navigation">
+  <div class="tabbar-inner">
+    <a href="index.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      <span class="tab-label">Dashboard</span>
+    </a>
+    <a href="health.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+      <span class="tab-label">Health</span>
+    </a>
+    <a href="water.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
+      <span class="tab-label">Water</span>
+    </a>
+    <a href="gym.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="18" y2="12"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/><line x1="3" y1="9" x2="3" y2="15"/><line x1="21" y1="9" x2="21" y2="15"/></svg></span>
+      <span class="tab-label">Gym</span>
+    </a>
+    <a href="finance.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
+      <span class="tab-label">Finance</span>
+    </a>
+    <a href="fitbit.html" class="tab" aria-current="page">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 4a2 2 0 1 1-2 2 2 2 0 0 1 2-2zm4 9.5a6 6 0 0 1-8 0"/><circle cx="8.5" cy="13.5" r="1.5"/><circle cx="15.5" cy="13.5" r="1.5"/></svg></span>
+      <span class="tab-label">Fitbit</span>
+    </a>
+  </div>
+</nav>
+
+<script>
+(function () {
+  'use strict';
+
+  const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+  const SCOPES = [
+    'https://www.googleapis.com/auth/fitness.activity.read',
+    'https://www.googleapis.com/auth/fitness.heart_rate.read',
+    'https://www.googleapis.com/auth/fitness.sleep.read',
+    'https://www.googleapis.com/auth/fitness.body.read'
+  ].join(' ');
+
+  const cfg = {
+    clientId: localStorage.getItem('gfit_cfg_clientId') || '',
+    proxyUrl: localStorage.getItem('gfit_cfg_proxyUrl') || (window.location.origin + '/api/fitbit-token')
+  };
+
+  const redirectUri = window.location.origin + '/api/fitbit-callback';
+  const el = document.getElementById('redirectUriDisplay');
+  if (el) el.textContent = redirectUri;
+
+  // ---- Token storage ----
+  function getTokens() {
+    return {
+      access:  localStorage.getItem('gfit_access_token'),
+      refresh: localStorage.getItem('gfit_refresh_token'),
+      expiry:  parseInt(localStorage.getItem('gfit_token_expiry') || '0', 10)
+    };
+  }
+  function saveTokens(data) {
+    if (data.access_token)  localStorage.setItem('gfit_access_token',  data.access_token);
+    if (data.refresh_token) localStorage.setItem('gfit_refresh_token', data.refresh_token);
+    if (data.expires_in)    localStorage.setItem('gfit_token_expiry',  String(Date.now() + data.expires_in * 1000));
+  }
+  function clearTokens() {
+    ['gfit_access_token', 'gfit_refresh_token', 'gfit_token_expiry'].forEach(k => localStorage.removeItem(k));
+  }
+
+  // ---- OAuth ----
+  function startAuth() {
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: cfg.clientId,
+      redirect_uri: redirectUri,
+      scope: SCOPES,
+      access_type: 'offline',
+      prompt: 'consent'
+    });
+    window.location.href = GOOGLE_AUTH_URL + '?' + params.toString();
+  }
+
+  async function exchangeCode(code) {
+    const resp = await fetch(cfg.proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ grant_type: 'authorization_code', code, redirect_uri: redirectUri })
+    });
+    if (!resp.ok) throw new Error('Token exchange failed (' + resp.status + ')');
+    saveTokens(await resp.json());
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  async function doRefresh() {
+    const t = getTokens();
+    if (!t.refresh) { clearTokens(); throw new Error('No refresh token — please reconnect'); }
+    const resp = await fetch(cfg.proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: t.refresh })
+    });
+    if (!resp.ok) { clearTokens(); throw new Error('Token refresh failed'); }
+    saveTokens(await resp.json());
+  }
+
+  // ---- Google Fit API ----
+  async function gfitPost(path, body) {
+    let t = getTokens();
+    if (!t.access) throw new Error('Not authenticated');
+    if (Date.now() > t.expiry - 60000) { await doRefresh(); t = getTokens(); }
+
+    const call = (tok) => fetch('https://www.googleapis.com' + path, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    let resp = await call(t.access);
+    if (resp.status === 401) {
+      await doRefresh(); t = getTokens();
+      resp = await call(t.access);
+    }
+    if (!resp.ok) throw new Error('Google Fit API ' + resp.status);
+    return resp.json();
+  }
+
+  // ---- Fetch all data ----
+  async function fetchAll() {
+    const now = Date.now();
+    const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
+    const yesterdayMidnight = new Date(todayMidnight); yesterdayMidnight.setDate(yesterdayMidnight.getDate() - 1);
+
+    const settle = p => p.then(v => ({ ok: true, v })).catch(() => ({ ok: false, v: null }));
+
+    // Activity: today midnight → now
+    const [actResp, sleepResp] = await Promise.all([
+      settle(gfitPost('/fitness/v1/users/me/dataset:aggregate', {
+        aggregateBy: [
+          { dataTypeName: 'com.google.step_count.delta' },
+          { dataTypeName: 'com.google.calories.expended' },
+          { dataTypeName: 'com.google.heart_rate.summary' },
+          { dataTypeName: 'com.google.active_minutes' },
+          { dataTypeName: 'com.google.distance.delta' }
+        ],
+        bucketByTime: { durationMillis: String(now - todayMidnight.getTime()) },
+        startTimeMillis: String(todayMidnight.getTime()),
+        endTimeMillis: String(now)
+      })),
+      // Sleep: yesterday midnight → now (captures last night)
+      settle(gfitPost('/fitness/v1/users/me/dataset:aggregate', {
+        aggregateBy: [{ dataTypeName: 'com.google.sleep.segment' }],
+        bucketByTime: { durationMillis: String(now - yesterdayMidnight.getTime()) },
+        startTimeMillis: String(yesterdayMidnight.getTime()),
+        endTimeMillis: String(now)
+      }))
+    ]);
+
+    return {
+      activity: actResp.ok ? actResp.v : null,
+      sleep:    sleepResp.ok ? sleepResp.v : null
+    };
+  }
+
+  // ---- Parse Google Fit response ----
+  function findDataset(bucket, typeName) {
+    if (!bucket || !bucket.dataset) return null;
+    return bucket.dataset.find(ds => ds.dataSourceId && ds.dataSourceId.includes(typeName)) || null;
+  }
+
+  function sumInt(ds)  { return ds && ds.point ? ds.point.reduce((s, p) => s + (p.value && p.value[0] ? (p.value[0].intVal || 0) : 0), 0) : null; }
+  function sumFp(ds)   { return ds && ds.point ? ds.point.reduce((s, p) => s + (p.value && p.value[0] ? (p.value[0].fpVal  || 0) : 0), 0) : null; }
+
+  function parse(raw) {
+    const d = {};
+    const actBucket = raw.activity && raw.activity.bucket && raw.activity.bucket[0];
+    const slpBucket = raw.sleep    && raw.sleep.bucket    && raw.sleep.bucket[0];
+
+    if (actBucket) {
+      const steps = findDataset(actBucket, 'step_count.delta');
+      const cals  = findDataset(actBucket, 'calories.expended');
+      const hr    = findDataset(actBucket, 'heart_rate.summary');
+      const azm   = findDataset(actBucket, 'active_minutes');
+      const dist  = findDataset(actBucket, 'distance.delta');
+
+      d.steps = sumInt(steps);
+      d.cals  = cals && cals.point && cals.point.length ? Math.round(sumFp(cals)) : null;
+      d.azm   = sumInt(azm);
+      d.dist  = dist && dist.point && dist.point.length ? Math.round(sumFp(dist) / 100) / 10 : null; // metres → km 1dp
+
+      if (hr && hr.point && hr.point.length) {
+        let minHr = Infinity, totalHr = 0, hrCount = 0;
+        hr.point.forEach(p => {
+          if (!p.value) return;
+          const avg = p.value[0] ? p.value[0].fpVal : null;
+          const min = p.value[2] ? p.value[2].fpVal : null;
+          if (avg) { totalHr += avg; hrCount++; }
+          if (min && min < minHr) minHr = min;
+        });
+        d.rhr   = minHr < Infinity ? Math.round(minHr) : null;
+        d.avgHr = hrCount ? Math.round(totalHr / hrCount) : null;
+      }
+    }
+
+    if (slpBucket && slpBucket.dataset) {
+      const sleepDs = findDataset(slpBucket, 'sleep.segment');
+      if (sleepDs && sleepDs.point && sleepDs.point.length) {
+        let rem = 0, deep = 0, light = 0, awake = 0;
+
+        sleepDs.point.forEach(p => {
+          const stage = p.value && p.value[0] ? p.value[0].intVal : 0;
+          const durMin = Math.round((parseInt(p.endTimeNanos) - parseInt(p.startTimeNanos)) / 60e9);
+          // Google Fit sleep stages: 1=awake, 2=sleep(generic), 3=out-of-bed, 4=light, 5=deep, 6=REM
+          if (stage === 6)           rem   += durMin;
+          else if (stage === 5)      deep  += durMin;
+          else if (stage === 4 || stage === 2) light += durMin;
+          else if (stage === 1)      awake += durMin;
+        });
+
+        const asleep = rem + deep + light;
+        const total  = asleep + awake;
+        d.sleepMin   = asleep;
+        d.sleepRem   = rem;
+        d.sleepDeep  = deep;
+        d.sleepLight = light;
+        d.sleepAwake = awake;
+        d.sleepEff   = total > 0 ? Math.round(asleep / total * 100) : null;
+
+        // Sleep score
+        let score = d.sleepEff || 0;
+        if (asleep >= 480) score = Math.min(100, score + 10);       // 8+ hours bonus
+        else if (asleep < 360) score = Math.max(0, score - 15);     // < 6 hours penalty
+        if (deep > 0 && asleep > 0 && deep / asleep >= 0.15) score = Math.min(100, score + 5);
+        if (rem  > 0 && asleep > 0 && rem  / asleep >= 0.20) score = Math.min(100, score + 5);
+        d.sleepScore = Math.round(score);
+      }
+    }
+
+    return d;
+  }
+
+  // ---- Helpers ----
+  function setText(id, v) { const e = document.getElementById(id); if (e) e.textContent = v != null ? v : '—'; }
+  function setZone(id, cls) {
+    const e = document.getElementById(id);
+    if (!e) return;
+    e.className = 'fb-zone';
+    if (cls) e.classList.add(cls);
+  }
+  function setWidth(id, pct) { const e = document.getElementById(id); if (e) e.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+  function fmtMin(m) { if (!m) return '—'; const h = Math.floor(m / 60), mn = m % 60; return h > 0 ? h + 'h ' + mn + 'm' : mn + 'm'; }
+
+  const zSteps  = v => v == null ? '' : v >= 10000 ? 'z-good' : v >= 6000 ? 'z-norm' : v >= 3000 ? 'z-warn' : 'z-bad';
+  const zRhr    = v => !v        ? '' : v <= 60    ? 'z-good' : v <= 70   ? 'z-norm' : v <= 80   ? 'z-warn' : 'z-bad';
+  const zAzm    = v => v == null ? '' : v >= 22    ? 'z-good' : v >= 10   ? 'z-norm' : v >= 5    ? 'z-warn' : 'z-bad';
+  const zScore  = s =>               s >= 80       ? 'z-good' : s >= 60   ? 'z-norm' : s >= 40   ? 'z-warn' : 'z-bad';
+
+  // ---- Render ----
+  function render(d) {
+    document.getElementById('fitbitDisconnected').style.display = 'none';
+    document.getElementById('fitbitConnected').style.display   = '';
+    setText('fitbitUpdated', 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+
+    const score = d.sleepScore != null ? d.sleepScore : 0;
+    const zone  = zScore(score);
+    const colors = { 'z-good': '#6ee7b7', 'z-norm': '#00C8D2', 'z-warn': '#fbbf24', 'z-bad': '#ff8a8a' };
+    const labels = { 'z-good': 'Excellent', 'z-norm': 'Good', 'z-warn': 'Fair', 'z-bad': 'Poor' };
+    const color  = colors[zone];
+    const circumference = 2 * Math.PI * 96;
+    const ring = document.getElementById('fitbitScoreRingFill');
+    ring.style.strokeDashoffset = circumference - (score / 100) * circumference;
+    ring.style.stroke = color;
+    ring.style.filter = 'drop-shadow(0 0 14px ' + color + '55)';
+
+    setText('fitbitScoreNum',   d.sleepScore != null ? d.sleepScore : '—');
+    const lbl = document.getElementById('fitbitScoreLabel');
+    lbl.textContent = d.sleepScore != null ? labels[zone] : '—';
+    lbl.style.color = color;
+
+    // Sleep stat card
+    setText('fitbitSleepDuration', fmtMin(d.sleepMin));
+    setText('fitbitSleepEff',      d.sleepEff != null ? d.sleepEff + '% eff.' : '—');
+    setZone('fbZoneSleep', zScore(score));
+
+    // Activity
+    setText('fitbitSteps', d.steps != null ? d.steps.toLocaleString() : '—');
+    setText('fitbitRhr',   d.rhr   != null ? d.rhr : '—');
+    setText('fitbitAzm',   d.azm   != null ? d.azm : '—');
+    setZone('fbZoneSteps', zSteps(d.steps));
+    setZone('fbZoneHr',    zRhr(d.rhr));
+    setZone('fbZoneAzm',   zAzm(d.azm));
+
+    // Sleep stages
+    if (d.sleepRem != null) {
+      const total = (d.sleepRem||0) + (d.sleepDeep||0) + (d.sleepLight||0) + (d.sleepAwake||0);
+      if (total > 0) {
+        document.getElementById('fitbitStages').style.display = '';
+        setText('fitbitStagesMeta', fmtMin(d.sleepMin) + ' asleep');
+        setWidth('fitbitStageRem',   (d.sleepRem  ||0)/total*100);
+        setWidth('fitbitStageDeep',  (d.sleepDeep ||0)/total*100);
+        setWidth('fitbitStageLight', (d.sleepLight||0)/total*100);
+        setWidth('fitbitStageAwake', (d.sleepAwake||0)/total*100);
+        setText('fitbitStageRemTxt',   fmtMin(d.sleepRem));
+        setText('fitbitStageDeepTxt',  fmtMin(d.sleepDeep));
+        setText('fitbitStageLightTxt', fmtMin(d.sleepLight));
+        setText('fitbitStageAwakeTxt', fmtMin(d.sleepAwake));
+      }
+    }
+
+    // Biomarkers
+    if (d.cals != null || d.dist != null || d.avgHr != null) {
+      document.getElementById('fitbitBio').style.display = 'grid';
+      setText('fitbitCals',  d.cals  != null ? d.cals.toLocaleString() + ' kcal' : '—');
+      setText('fitbitDist',  d.dist  != null ? d.dist + ' km'                    : '—');
+      setText('fitbitAvgHr', d.avgHr != null ? d.avgHr + ' bpm'                 : '—');
+    }
+
+    renderVerdict(d, score, zone);
+  }
+
+  function renderVerdict(d, score, zone) {
+    const el = document.getElementById('fitbitVerdict');
+    el.style.display = '';
+    const badge = document.getElementById('fitbitVerdictBadge');
+    const configs = {
+      'z-good': { label:'GREAT', bg:'rgba(110,231,183,0.12)', border:'rgba(110,231,183,0.35)', color:'#6ee7b7', head:"Well-rested. Push hard today." },
+      'z-norm': { label:'GOOD',  bg:'rgba(0,200,210,0.10)',   border:'rgba(0,200,210,0.30)',   color:'#00C8D2', head:"Decent sleep. Moderate to hard training is fine." },
+      'z-warn': { label:'FAIR',  bg:'rgba(251,191,36,0.10)',  border:'rgba(251,191,36,0.32)',  color:'#fbbf24', head:"Below-average sleep. Keep intensity moderate.", avoid:'Max-effort lifting or hard cardio.' },
+      'z-bad':  { label:'REST',  bg:'rgba(255,138,138,0.10)', border:'rgba(255,138,138,0.32)', color:'#ff8a8a', head:"Poor sleep. Prioritise recovery today.",         avoid:'Intense training — choose light movement or full rest.' }
+    };
+    const c = configs[zone] || configs['z-norm'];
+    badge.textContent = c.label;
+    badge.style.cssText = `background:${c.bg};border-color:${c.border};color:${c.color}`;
+    document.getElementById('fitbitVerdictHeadline').textContent = c.head;
+
+    const notes = [];
+    if (d.sleepMin != null && d.sleepMin < 360) notes.push('Under 6 hours of sleep logged.');
+    if (d.rhr      != null && d.rhr > 72)       notes.push('Resting HR slightly elevated.');
+    if (d.steps    != null && d.steps >= 10000)  notes.push('Step goal hit — great work!');
+    if (d.azm      != null && d.azm >= 22)       notes.push('Active minutes on track.');
+    document.getElementById('fitbitVerdictReasons').textContent = notes.join(' ') || (score >= 80 ? 'All metrics look strong.' : '');
+
+    const avoidEl = document.getElementById('fitbitVerdictAvoid');
+    if (c.avoid) {
+      avoidEl.style.display = '';
+      document.getElementById('fitbitVerdictAvoidText').textContent = c.avoid;
+    } else {
+      avoidEl.style.display = 'none';
+    }
+  }
+
+  // ---- Refresh loop ----
+  let timer = null;
+
+  async function refresh() {
+    if (!getTokens().access) return;
+    const btn = document.getElementById('fitbitRefreshBtn');
+    const errEl = document.getElementById('fitbitError');
+    if (btn) btn.style.opacity = '0.4';
+    errEl.classList.remove('is-visible');
+    try {
+      render(parse(await fetchAll()));
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.add('is-visible');
+      setText('fitbitUpdated', 'Error — tap ↻ to retry');
+    } finally {
+      if (btn) btn.style.opacity = '';
+    }
+  }
+
+  function startLoop() {
+    clearInterval(timer);
+    timer = setInterval(refresh, 15 * 60 * 1000);
+  }
+
+  // ---- Setup overlay ----
+  function showOverlay() {
+    document.getElementById('cfgClientId').value = cfg.clientId;
+    document.getElementById('cfgProxyUrl').value = cfg.proxyUrl;
+    document.getElementById('setupOverlay').classList.add('is-visible');
+  }
+  function hideOverlay() { document.getElementById('setupOverlay').classList.remove('is-visible'); }
+
+  if (!cfg.clientId || !cfg.proxyUrl) showOverlay();
+
+  document.getElementById('openCfgBtn').addEventListener('click', showOverlay);
+  document.getElementById('cfgSkipBtn').addEventListener('click', hideOverlay);
+  document.getElementById('cfgSaveBtn').addEventListener('click', () => {
+    cfg.clientId = document.getElementById('cfgClientId').value.trim();
+    cfg.proxyUrl = document.getElementById('cfgProxyUrl').value.trim();
+    localStorage.setItem('gfit_cfg_clientId', cfg.clientId);
+    localStorage.setItem('gfit_cfg_proxyUrl', cfg.proxyUrl);
+    hideOverlay();
+    location.reload();
+  });
+
+  document.getElementById('fitbitConnectBtn').addEventListener('click', () => {
+    if (!cfg.clientId) { showOverlay(); return; }
+    startAuth();
+  });
+
+  document.getElementById('fitbitRefreshBtn').addEventListener('click', refresh);
+
+  document.getElementById('fitbitDisconnectBtn').addEventListener('click', () => {
+    clearTokens(); clearInterval(timer);
+    document.getElementById('fitbitConnected').style.display  = 'none';
+    document.getElementById('fitbitDisconnected').style.display = '';
+    document.getElementById('fitbitError').classList.remove('is-visible');
+  });
+
+  // ---- Init ----
+  async function init() {
+    // Check for tokens passed via hash from fitbit-callback function
+    if (window.location.hash && window.location.hash.length > 1) {
+      const hash = new URLSearchParams(window.location.hash.slice(1));
+      const at  = hash.get('at');
+      const rt  = hash.get('rt');
+      const exp = hash.get('exp');
+      if (at) {
+        localStorage.setItem('gfit_access_token',  at);
+        if (rt) localStorage.setItem('gfit_refresh_token', rt);
+        if (exp) localStorage.setItem('gfit_token_expiry', exp);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    // Check for auth error passed via query param
+    const qp = new URLSearchParams(window.location.search);
+    if (qp.get('auth_error')) {
+      document.getElementById('fitbitAuthStatus').textContent = 'Auth failed: ' + qp.get('auth_error');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (getTokens().access) { await refresh(); startLoop(); }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
