@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Connecting…</title>
+<style>
+  body { margin: 0; background: #0a0a0b; color: #fff; font-family: -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .msg { text-align: center; opacity: 0.6; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="msg">Connecting to Google Fit…</div>
+<script>
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    const code  = params.get('code');
+    const error = params.get('error');
+
+    if (error || !code) {
+      localStorage.setItem('gfit_oauth_error', error || 'no_code');
+      window.location.href = '/fitbit';
+      return;
+    }
+
+    // Store code for fitbit.html to pick up
+    localStorage.setItem('gfit_pending_code', code);
+    window.location.href = '/fitbit';
+  })();
+</script>
+</body>
+</html>

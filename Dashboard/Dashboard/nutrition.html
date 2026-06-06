@@ -1,0 +1,1114 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06080f">
+<meta name="color-scheme" content="dark">
+<title>Nutrition</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="theme.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --text-primary:   #FAFAFA;
+  --text-secondary: #B8B6B0;
+  --text-tertiary:  #76746E;
+  --success: #6BE3A4;
+  --warning: #F2C063;
+  --danger:  #FF6B6B;
+  --info:    #7DD3FC;
+  --accent:  #6366F1;
+  --font-body: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+body {
+  color: var(--text-primary); font-family: var(--font-body);
+  min-height: 100vh; overflow-x: hidden;
+  padding: max(24px, env(safe-area-inset-top)) 20px;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; filter: blur(40px);
+  animation: bgDrift 36s ease-in-out infinite alternate;
+  pointer-events: none; z-index: 0;
+}
+@keyframes bgDrift {
+  0%   { transform: translate(0,0) scale(1); }
+  50%  { transform: translate(10px,-6px) scale(1.03); }
+  100% { transform: translate(-6px,8px) scale(0.98); }
+}
+.page-wrap { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+
+/* ── Chrome ──────────────────────────────────────────── */
+.day-pill {
+  display: inline-flex; align-items: center;
+  padding: 5px 12px; border-radius: 999px; margin-bottom: 8px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary);
+}
+.page-title {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.025em;
+  background: linear-gradient(180deg, #FFFFFF 0%, #C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; margin-bottom: 22px;
+}
+.section-title {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text-tertiary);
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px; margin-top: 24px;
+}
+.section-title::before { content:''; width:18px; height:1px; background:var(--text-tertiary); opacity:.6; flex-shrink:0; }
+.section-title::after  { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(255,255,255,.08),transparent); }
+
+/* ── Glass card ──────────────────────────────────────── */
+.card {
+  background: rgba(15,23,42,0.40);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px; padding: 18px 20px; margin-bottom: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.04);
+  position: relative; overflow: hidden;
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 14px; right: 14px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  pointer-events: none;
+}
+.eyebrow {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-tertiary); margin-bottom: 8px;
+}
+
+/* ═══════════════════════════════════════════
+   SECTION A — HYDRATION (1 GALLON / 8 PINTS)
+   ═══════════════════════════════════════════ */
+.water-count-row { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; }
+.water-num  { font-size:52px; font-weight:700; letter-spacing:-0.035em; line-height:1; font-variant-numeric:tabular-nums; }
+.water-denom { font-size:20px; color:var(--text-tertiary); font-weight:500; font-family:var(--font-mono); }
+
+/* 8 pint segments */
+.pint-segments {
+  display: grid; grid-template-columns: repeat(8,1fr);
+  gap: 5px; margin: 12px 0;
+}
+.pint-seg {
+  height: 10px; border-radius: 5px;
+  background: rgba(255,255,255,0.06);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.pint-seg.filled {
+  background: linear-gradient(90deg, var(--info), var(--success));
+  box-shadow: 0 0 10px rgba(125,211,252,0.40);
+}
+.pint-seg.overflow { background: var(--warning); box-shadow: 0 0 8px rgba(242,192,99,0.45); }
+
+.water-actions { display:grid; grid-template-columns:52px 1fr; gap:10px; margin-top:14px; }
+.btn-minus {
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+  border-radius:14px; color:var(--text-primary); font-size:22px; cursor:pointer;
+  transition:background .15s; -webkit-tap-highlight-color:transparent;
+}
+.btn-minus:hover { background:rgba(255,255,255,.09); }
+.btn-minus:disabled { opacity:.25; cursor:not-allowed; }
+.btn-plus {
+  background:linear-gradient(180deg,#fff 0%,#e8e5dd 100%);
+  color:#0a0a0b; border:none; border-radius:14px;
+  font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; padding:15px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 14px rgba(0,0,0,.40);
+  transition:transform .12s; -webkit-tap-highlight-color:transparent;
+}
+.btn-plus:hover { transform:translateY(-1px); }
+.btn-plus:active { transform:scale(.97); }
+
+.water-hint { margin-top:10px; font-size:12px; color:var(--text-tertiary); font-style:italic; text-align:center; }
+.water-hint.good { color:var(--success); font-style:normal; }
+
+/* Sparkline + history */
+.spark-wrap { padding:4px 0 10px; }
+.spark-svg  { width:100%; height:56px; display:block; }
+.hist-row {
+  display:grid; grid-template-columns:64px 1fr auto; gap:10px;
+  padding:7px 0; align-items:center;
+  border-bottom:1px solid rgba(255,255,255,.05); font-size:12px;
+}
+.hist-row:last-child { border-bottom:none; }
+.hist-date  { font-size:10px; color:var(--text-tertiary); font-family:var(--font-mono); }
+.hist-bar-wrap { height:6px; background:rgba(255,255,255,.04); border-radius:3px; overflow:hidden; }
+.hist-bar-fill { height:100%; border-radius:3px; transition:width .4s; }
+.hist-bar-fill.ok   { background:linear-gradient(90deg,var(--info),var(--success)); box-shadow:0 0 6px rgba(125,211,252,.3); }
+.hist-bar-fill.warn { background:var(--warning); box-shadow:0 0 5px rgba(242,192,99,.3); }
+.hist-bar-fill.low  { background:rgba(255,107,107,.5); }
+.hist-count { font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); white-space:nowrap; }
+
+/* ═══════════════════════════════════════════
+   SECTION B — FASTING TIMER
+   ═══════════════════════════════════════════ */
+.fast-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:5px 14px; border-radius:999px; margin-bottom:14px;
+  font-family:var(--font-mono); font-size:10px; font-weight:800;
+  letter-spacing:.10em; text-transform:uppercase;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07);
+  color:var(--text-tertiary); transition:all .3s;
+}
+.fast-badge.active {
+  background:rgba(99,102,241,.12); border-color:rgba(99,102,241,.35); color:#a5b4fc;
+}
+.fast-badge.active::before {
+  content:''; width:7px; height:7px; border-radius:50%;
+  background:#6366F1; box-shadow:0 0 10px rgba(99,102,241,.9);
+  animation:fastLed 1.4s ease-in-out infinite;
+}
+@keyframes fastLed {
+  0%,100%{ opacity:1; transform:scale(1); }
+  50%    { opacity:.5; transform:scale(.82); }
+}
+.fast-timer {
+  font-size:44px; font-weight:700; letter-spacing:-0.04em; line-height:1;
+  font-family:var(--font-mono); font-variant-numeric:tabular-nums;
+  color:var(--text-primary); margin-bottom:6px; transition:color .3s,text-shadow .3s;
+}
+.fast-timer.active { color:#a5b4fc; text-shadow:0 0 28px rgba(99,102,241,.55); }
+.fast-sub { font-size:12px; color:var(--text-tertiary); margin-bottom:20px; min-height:18px; }
+.fast-toggle {
+  width:100%; padding:16px; border:1px solid; border-radius:16px;
+  font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  transition:all .25s; -webkit-tap-highlight-color:transparent;
+}
+.fast-toggle.idle {
+  background:rgba(99,102,241,.14); border-color:rgba(99,102,241,.35); color:#a5b4fc;
+  box-shadow:0 0 24px rgba(99,102,241,.18);
+}
+.fast-toggle.idle:hover { background:rgba(99,102,241,.22); box-shadow:0 0 36px rgba(99,102,241,.32); }
+.fast-toggle.running {
+  background:rgba(255,107,107,.10); border-color:rgba(255,107,107,.28); color:#fca5a5;
+}
+.fast-toggle.running:hover { background:rgba(255,107,107,.17); }
+.fast-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+.fast-stat {
+  padding:12px 14px; border-radius:12px;
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06);
+}
+.fast-stat-lbl { font-size:9px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:4px; font-family:var(--font-mono); }
+.fast-stat-val { font-size:19px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text-primary); }
+.fast-chart-wrap { position:relative; height:180px; padding-top:8px; }
+
+/* ═══════════════════════════════════════════
+   SECTION C — MEALS & MACROS
+   ═══════════════════════════════════════════ */
+
+/* Daily summary */
+.macro-summary-grid {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:2px;
+}
+@media (max-width:480px) { .macro-summary-grid { grid-template-columns:repeat(2,1fr); } }
+.macro-box { display:flex; flex-direction:column; gap:3px; }
+.macro-box-label { font-family:var(--font-mono); font-size:8.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); }
+.macro-box-val   { font-family:var(--font-mono); font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text-primary); }
+.macro-box-val.kcal   { color:#fb923c; }
+.macro-box-val.protein { color:#818cf8; }
+.macro-box-val.carbs   { color:#fcd34d; }
+.macro-box-val.fat     { color:#34d399; }
+.macro-summary-bar { margin-top:12px; }
+.macro-summary-track { height:5px; background:rgba(255,255,255,.05); border-radius:3px; overflow:hidden; display:flex; gap:2px; }
+.macro-summary-seg { height:100%; border-radius:3px; transition:flex .5s; }
+.macro-seg-p { background:#818cf8; box-shadow:0 0 6px rgba(129,140,248,.4); }
+.macro-seg-c { background:#fcd34d; box-shadow:0 0 6px rgba(252,211,77,.3); }
+.macro-seg-f { background:#34d399; box-shadow:0 0 6px rgba(52,211,153,.3); }
+
+/* Meal category section */
+.meal-category { margin-bottom:16px; }
+.meal-cat-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:10px;
+}
+.meal-cat-label {
+  font-size:10px; font-weight:800; letter-spacing:.16em; text-transform:uppercase;
+  font-family:var(--font-mono); display:flex; align-items:center; gap:8px;
+}
+.meal-cat-label::before { content:''; width:14px; height:1px; background:currentColor; opacity:.5; }
+.meal-cat-kcal { font-size:11px; font-family:var(--font-mono); color:var(--text-tertiary); font-variant-numeric:tabular-nums; }
+.cat-breakfast { color:#fb923c; }
+.cat-lunch     { color:#6BE3A4; }
+.cat-dinner    { color:#818cf8; }
+.meal-cat-quick-add {
+  background:none; border:none; cursor:pointer;
+  color:var(--text-tertiary); font-size:18px; padding:2px 6px;
+  border-radius:6px; line-height:1; transition:color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.meal-cat-quick-add:hover { color:var(--text-primary); }
+
+/* Meal entry card */
+.meal-entry {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 14px; margin-bottom:7px;
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06);
+  border-radius:13px; transition:background .15s;
+  position:relative; overflow:hidden;
+}
+.meal-entry::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:0;
+}
+.cat-b .meal-entry::before { background:rgba(251,146,60,.65); }
+.cat-l .meal-entry::before { background:rgba(107,227,164,.65); }
+.cat-d .meal-entry::before { background:rgba(129,140,248,.65); }
+.meal-entry:hover { background:rgba(255,255,255,.055); }
+.meal-entry-body { flex:1; min-width:0; }
+.meal-entry-name { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:3px; }
+.meal-entry-macros { font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono); }
+.meal-entry-macros span { margin-right:10px; }
+.meal-entry-kcal {
+  font-size:16px; font-weight:700; font-variant-numeric:tabular-nums;
+  color:var(--text-primary); white-space:nowrap; font-family:var(--font-mono);
+  flex-shrink:0;
+}
+.meal-entry-kcal span { font-size:9px; color:var(--text-tertiary); display:block; text-align:right; letter-spacing:.08em; text-transform:uppercase; }
+.meal-entry-actions { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+.meal-btn {
+  background:none; border:none; cursor:pointer; font-size:13px;
+  padding:3px 8px; border-radius:6px; color:var(--text-tertiary);
+  opacity:.55; transition:opacity .15s, color .15s;
+  -webkit-tap-highlight-color:transparent; white-space:nowrap;
+}
+.meal-entry:hover .meal-btn { opacity:1; }
+.meal-btn:hover { color:var(--text-primary); }
+.meal-btn.del:hover { color:var(--danger); }
+
+.meal-empty {
+  text-align:center; padding:14px 0; font-size:12px;
+  color:var(--text-tertiary); font-style:italic;
+}
+
+/* Edit inline form */
+.meal-edit-form {
+  padding:12px 14px; margin-bottom:7px;
+  background:rgba(99,102,241,.06); border:1px solid rgba(99,102,241,.22);
+  border-radius:13px;
+}
+.meal-edit-row { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+.meal-edit-input {
+  flex:1; min-width:80px; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.10);
+  border-radius:9px; color:var(--text-primary); font-family:inherit; font-size:13px;
+  padding:8px 10px; outline:none; transition:border-color .2s;
+  -moz-appearance:textfield;
+}
+.meal-edit-input::-webkit-outer-spin-button,
+.meal-edit-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+.meal-edit-input:focus { border-color:rgba(99,102,241,.55); }
+.meal-edit-input::placeholder { color:var(--text-tertiary); }
+.meal-edit-input.name-inp { flex:2; min-width:140px; }
+.meal-edit-macro-row { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px; }
+.macro-inp-label {
+  font-size:8px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--text-tertiary); font-family:var(--font-mono); margin-bottom:3px;
+}
+.meal-edit-actions { display:flex; gap:8px; justify-content:flex-end; }
+.edit-save-btn {
+  padding:8px 18px; border:none; border-radius:9px;
+  background:rgba(99,102,241,.22); color:#a5b4fc;
+  font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;
+  transition:background .15s;
+}
+.edit-save-btn:hover { background:rgba(99,102,241,.35); }
+.edit-cancel-btn {
+  padding:8px 14px; border:1px solid rgba(255,255,255,.08);
+  background:none; border-radius:9px;
+  color:var(--text-tertiary); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;
+  transition:color .15s;
+}
+.edit-cancel-btn:hover { color:var(--text-primary); }
+
+/* Add meal panel */
+.add-meal-panel {
+  padding:16px 18px; border-radius:16px; margin-bottom:14px;
+  background:rgba(255,255,255,.025); border:1px dashed rgba(255,255,255,.10);
+  display:none;
+}
+.add-meal-panel.open { display:block; }
+.add-meal-row1 { display:flex; gap:8px; margin-bottom:8px; align-items:flex-end; }
+.add-meal-cat {
+  flex-shrink:0; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10);
+  border-radius:9px; color:var(--text-primary); font-family:inherit; font-size:13px;
+  font-weight:600; padding:9px 10px; cursor:pointer; color-scheme:dark; outline:none;
+}
+.add-meal-cat:focus { border-color:rgba(99,102,241,.5); }
+.add-meal-macro-row { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:10px; }
+.add-meal-actions { display:flex; gap:8px; justify-content:flex-end; }
+.add-meal-btn {
+  padding:10px 22px; border:none; border-radius:10px;
+  background:linear-gradient(135deg,rgba(99,102,241,.28),rgba(107,227,164,.20));
+  color:#a5b4fc; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;
+  border:1px solid rgba(99,102,241,.30);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+  transition:background .15s, box-shadow .15s;
+}
+.add-meal-btn:hover { background:linear-gradient(135deg,rgba(99,102,241,.40),rgba(107,227,164,.28)); box-shadow:0 0 18px rgba(99,102,241,.22); }
+.add-cancel-btn {
+  padding:10px 14px; border:1px solid rgba(255,255,255,.08);
+  background:none; border-radius:10px;
+  color:var(--text-tertiary); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;
+}
+.add-cancel-btn:hover { color:var(--text-primary); }
+
+/* Open add meal trigger button */
+.add-meal-trigger {
+  width:100%; padding:12px; border-radius:14px; margin-bottom:16px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  background:rgba(99,102,241,.08); border:1px dashed rgba(99,102,241,.28);
+  color:#a5b4fc; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;
+  transition:background .2s, box-shadow .2s, border-color .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.add-meal-trigger:hover {
+  background:rgba(99,102,241,.15); border-color:rgba(99,102,241,.50);
+  box-shadow:0 0 20px rgba(99,102,241,.18);
+}
+</style>
+  <link rel="stylesheet" href="themes.css">
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="day-pill" id="dayPill">—</div>
+  <h1 class="page-title">Nutrition</h1>
+
+  <!-- ════════════ SECTION A: HYDRATION ════════════ -->
+  <div class="section-title">Hydration — 1 Gallon Goal</div>
+
+  <div class="card">
+    <div class="eyebrow" id="waterEyebrow">PINTS DRANK TODAY</div>
+    <div class="water-count-row">
+      <span class="water-num" id="waterNum">0</span>
+      <span class="water-denom">/ 8 pints</span>
+    </div>
+    <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">
+      <span id="waterOzLabel">0 fl oz</span>
+      <span style="color:rgba(255,255,255,.15);margin:0 8px">·</span>
+      <span id="waterPctLabel">0% of 1 gallon</span>
+    </div>
+
+    <!-- 8 segment pint indicator -->
+    <div class="pint-segments" id="pintSegments">
+      <div class="pint-seg"></div><div class="pint-seg"></div>
+      <div class="pint-seg"></div><div class="pint-seg"></div>
+      <div class="pint-seg"></div><div class="pint-seg"></div>
+      <div class="pint-seg"></div><div class="pint-seg"></div>
+    </div>
+
+    <div class="water-actions">
+      <button class="btn-minus" id="wMinusBtn" type="button" aria-label="Remove one pint">−</button>
+      <button class="btn-plus"  id="wPlusBtn"  type="button">
+        <span id="wPlusLabel">+ Add a Pint  (16 fl oz)</span>
+      </button>
+    </div>
+    <div class="water-hint" id="waterHint">Start the day — first pint in.</div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">LAST 14 DAYS</div>
+    <div class="spark-wrap">
+      <svg class="spark-svg" id="sparkSvg" viewBox="0 0 300 56" preserveAspectRatio="none"></svg>
+    </div>
+    <div id="histList"></div>
+  </div>
+
+  <!-- ════════════ SECTION B: FASTING ════════════ -->
+  <div class="section-title">Intermittent Fasting</div>
+
+  <div class="card">
+    <div class="fast-badge" id="fastBadge">Eating Window</div>
+    <div class="fast-timer" id="fastTimer">00:00:00</div>
+    <div class="fast-sub"   id="fastSub">Tap below to begin a fast</div>
+
+    <button class="fast-toggle idle" id="fastToggle" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="fastToggleLabel">Start Fast</span>
+    </button>
+
+    <div class="fast-stats">
+      <div class="fast-stat">
+        <div class="fast-stat-lbl">Last Fast</div>
+        <div class="fast-stat-val" id="fastLastVal">—</div>
+      </div>
+      <div class="fast-stat">
+        <div class="fast-stat-lbl">14-Day Avg</div>
+        <div class="fast-stat-val" id="fastAvgVal">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">FASTING HISTORY · 14 DAYS</div>
+    <div class="fast-chart-wrap">
+      <canvas id="fastChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ════════════ SECTION C: MEALS & MACROS ════════════ -->
+  <div class="section-title">Meals &amp; Macros</div>
+
+  <!-- Daily macro summary -->
+  <div class="card" id="macroSummaryCard">
+    <div class="eyebrow">TODAY'S TOTALS</div>
+    <div class="macro-summary-grid">
+      <div class="macro-box"><div class="macro-box-label">Calories</div><div class="macro-box-val kcal" id="totalKcal">0</div></div>
+      <div class="macro-box"><div class="macro-box-label">Protein</div><div class="macro-box-val protein" id="totalProtein">0g</div></div>
+      <div class="macro-box"><div class="macro-box-label">Carbs</div><div class="macro-box-val carbs" id="totalCarbs">0g</div></div>
+      <div class="macro-box"><div class="macro-box-label">Fat</div><div class="macro-box-val fat" id="totalFat">0g</div></div>
+    </div>
+    <div class="macro-summary-bar">
+      <div class="macro-summary-track" id="macroBar"></div>
+    </div>
+  </div>
+
+  <!-- Add Meal trigger -->
+  <button class="add-meal-trigger" id="addMealTrigger">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Meal Entry
+  </button>
+
+  <!-- Add Meal form (hidden by default) -->
+  <div class="add-meal-panel" id="addMealPanel">
+    <div class="eyebrow" style="margin-bottom:10px">New Entry</div>
+    <div class="add-meal-row1">
+      <select class="add-meal-cat" id="addCat">
+        <option value="breakfast">🌅 Breakfast</option>
+        <option value="lunch">☀️ Lunch</option>
+        <option value="dinner">🌙 Dinner</option>
+      </select>
+      <input type="text" class="meal-edit-input" id="addName" placeholder="Meal or food name…" style="flex:2;min-width:140px">
+    </div>
+    <div class="add-meal-macro-row">
+      <div>
+        <div class="macro-inp-label" style="color:#fb923c">Calories</div>
+        <input type="number" class="meal-edit-input" id="addKcal" placeholder="0" min="0" step="1">
+      </div>
+      <div>
+        <div class="macro-inp-label" style="color:#818cf8">Protein g</div>
+        <input type="number" class="meal-edit-input" id="addProt" placeholder="0" min="0" step="0.1">
+      </div>
+      <div>
+        <div class="macro-inp-label" style="color:#fcd34d">Carbs g</div>
+        <input type="number" class="meal-edit-input" id="addCarb" placeholder="0" min="0" step="0.1">
+      </div>
+      <div>
+        <div class="macro-inp-label" style="color:#34d399">Fat g</div>
+        <input type="number" class="meal-edit-input" id="addFat" placeholder="0" min="0" step="0.1">
+      </div>
+    </div>
+    <div class="add-meal-actions">
+      <button class="add-cancel-btn" id="addCancelBtn">Cancel</button>
+      <button class="add-meal-btn"   id="addSaveBtn">Add to Log</button>
+    </div>
+  </div>
+
+  <!-- Breakfast -->
+  <div class="meal-category cat-b">
+    <div class="meal-cat-header">
+      <div class="meal-cat-label cat-breakfast">🌅 Breakfast<span id="bfKcal" class="meal-cat-kcal" style="margin-left:10px;font-size:10px"></span></div>
+    </div>
+    <div id="bfList"></div>
+  </div>
+
+  <!-- Lunch -->
+  <div class="meal-category cat-l">
+    <div class="meal-cat-header">
+      <div class="meal-cat-label cat-lunch">☀️ Lunch<span id="luKcal" class="meal-cat-kcal" style="margin-left:10px;font-size:10px"></span></div>
+    </div>
+    <div id="luList"></div>
+  </div>
+
+  <!-- Dinner -->
+  <div class="meal-category cat-d">
+    <div class="meal-cat-header">
+      <div class="meal-cat-label cat-dinner">🌙 Dinner<span id="diKcal" class="meal-cat-kcal" style="margin-left:10px;font-size:10px"></span></div>
+    </div>
+    <div id="diList"></div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script src="topbar.js" defer></script>
+<nav class="tabbar" role="navigation" aria-label="Main navigation">
+  <div class="tabbar-inner">
+    <a href="index.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      <span class="tab-label">Dashboard</span>
+    </a>
+    <a href="nutrition.html" class="tab" aria-current="page">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="8"/><line x1="10" y1="2" x2="10" y2="8"/><line x1="14" y1="2" x2="14" y2="8"/></svg></span>
+      <span class="tab-label">Nutrition</span>
+    </a>
+    <a href="gym.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="12" x2="18" y2="12"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/><line x1="3" y1="9" x2="3" y2="15"/><line x1="21" y1="9" x2="21" y2="15"/></svg></span>
+      <span class="tab-label">Gym</span>
+    </a>
+    <a href="finance.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
+      <span class="tab-label">Finances</span>
+    </a>
+    <a href="social.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      <span class="tab-label">Social</span>
+    </a>
+    <a href="hygiene.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      <span class="tab-label">Hygiene</span>
+    </a>
+  </div>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ─────────────────────────────────────────────
+   STORAGE & DATES
+───────────────────────────────────────────── */
+function ls(key, val) {
+  if (val === undefined) {
+    try { const r = localStorage.getItem(key); return r == null ? null : JSON.parse(r); }
+    catch { return null; }
+  }
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+function uid() { return '_' + Date.now() + '_' + Math.floor(Math.random() * 99999); }
+function dateKey(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function todayStr() { return dateKey(new Date()); }
+function fmtHours(h) {
+  const hh = Math.floor(h); const mm = Math.round((h - hh) * 60);
+  return mm > 0 ? hh + 'h ' + mm + 'm' : hh + 'h';
+}
+function fmtDuration(ms) {
+  const s  = Math.floor(ms / 1000);
+  const hh = String(Math.floor(s / 3600)).padStart(2,'0');
+  const mm = String(Math.floor((s % 3600) / 60)).padStart(2,'0');
+  const ss = String(s % 60).padStart(2,'0');
+  return hh + ':' + mm + ':' + ss;
+}
+
+/* ─────────────────────────────────────────────
+   DAY PILL
+───────────────────────────────────────────── */
+(function() {
+  const d = new Date();
+  const DAYS  = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('dayPill').textContent =
+    DAYS[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate();
+})();
+
+/* ═══════════════════════════════════════════════
+   SECTION A — HYDRATION (1 Gallon / 8 Pints)
+   Storage key: 'nutrition_water_v2'
+   Structure: { logs: { 'YYYY-MM-DD': count } }
+═══════════════════════════════════════════════ */
+const WATER_KEY = 'nutrition_water_v2';
+const PINT_GOAL = 8;
+const PINT_OZ   = 16;
+
+function loadWater() {
+  const s = ls(WATER_KEY);
+  if (s && s.logs) return s;
+  const fresh = { logs: {} };
+  ls(WATER_KEY, fresh);
+  return fresh;
+}
+function saveWater(s) { ls(WATER_KEY, s); }
+
+function todayPints() { return loadWater().logs[todayStr()] || 0; }
+function setTodayPints(n) {
+  const s = loadWater();
+  const k = todayStr();
+  if (n <= 0) delete s.logs[k]; else s.logs[k] = n;
+  saveWater(s);
+}
+
+function renderWater() {
+  const count = todayPints();
+  const pct   = Math.round(count / PINT_GOAL * 100);
+  const oz    = count * PINT_OZ;
+
+  document.getElementById('waterNum').textContent    = count;
+  document.getElementById('waterOzLabel').textContent = oz + ' fl oz';
+  document.getElementById('waterPctLabel').textContent = pct + '% of 1 gallon';
+  document.getElementById('wMinusBtn').disabled       = count <= 0;
+
+  /* Segment pills */
+  const segs = document.querySelectorAll('.pint-seg');
+  segs.forEach((seg, i) => {
+    seg.classList.remove('filled', 'overflow');
+    if (i < count && i < PINT_GOAL) seg.classList.add('filled');
+    else if (i < count) seg.classList.add('overflow');
+  });
+
+  /* Hint text */
+  const hint = document.getElementById('waterHint');
+  if      (count === 0)           { hint.textContent = 'Start the day — first pint in.';               hint.classList.remove('good'); }
+  else if (count < 4)             { hint.textContent = 'Behind pace — keep drinking.';                  hint.classList.remove('good'); }
+  else if (count < PINT_GOAL)     { hint.textContent = (PINT_GOAL - count) + ' pints to the gallon.';  hint.classList.remove('good'); }
+  else if (count === PINT_GOAL)   { hint.textContent = '✓ Gallon reached — great hydration!';           hint.classList.add('good'); }
+  else                            { hint.textContent = 'Past a gallon — exceptional!';                  hint.classList.add('good'); }
+
+  renderWaterHistory();
+}
+
+function renderWaterHistory() {
+  const wState = loadWater();
+  const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let html = '';
+  for (let i = 13; i >= 1; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const k = dateKey(d); const count = wState.logs[k] || 0;
+    const pct  = Math.min(100, Math.round(count / PINT_GOAL * 100));
+    const cls  = count >= PINT_GOAL ? 'ok' : count >= 5 ? 'warn' : 'low';
+    const lbl  = DAYS[d.getDay()] + ' ' + (d.getMonth()+1) + '/' + d.getDate();
+    html += '<div class="hist-row">'
+      + '<span class="hist-date">' + lbl + '</span>'
+      + '<div class="hist-bar-wrap"><div class="hist-bar-fill ' + cls + '" style="width:' + pct + '%"></div></div>'
+      + '<span class="hist-count">' + count + '/' + PINT_GOAL + '</span>'
+      + '</div>';
+  }
+  document.getElementById('histList').innerHTML = html || '<div style="text-align:center;font-size:12px;color:var(--text-tertiary);padding:10px 0">No history yet.</div>';
+  renderWaterSparkline(wState);
+}
+
+function renderWaterSparkline(wState) {
+  const svg = document.getElementById('sparkSvg');
+  const W = 300, H = 56, pad = 3, days = 14;
+  const data = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    data.push(wState.logs[dateKey(d)] || 0);
+  }
+  const maxVal = Math.max(PINT_GOAL, ...data) || 1;
+  const colW   = (W - pad * 2) / data.length;
+  const barW   = colW * 0.65;
+  const tgtY   = H - pad - (PINT_GOAL / maxVal) * (H - pad * 2);
+  let html = '<line stroke="rgba(255,255,255,0.12)" stroke-dasharray="3 3" stroke-width="1" vector-effect="non-scaling-stroke" x1="0" x2="' + W + '" y1="' + tgtY.toFixed(1) + '" y2="' + tgtY.toFixed(1) + '"/>';
+  data.forEach((v, i) => {
+    const x = pad + i * colW + (colW - barW) / 2;
+    const h = Math.max(0, (v / maxVal) * (H - pad * 2));
+    const y = H - pad - h;
+    const hit   = v >= PINT_GOAL;
+    const color = hit ? 'rgba(107,227,164,0.65)' : v >= 5 ? 'rgba(242,192,99,0.55)' : 'rgba(255,107,107,0.40)';
+    html += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2" fill="' + color + '"/>';
+  });
+  svg.innerHTML = html;
+}
+
+document.getElementById('wPlusBtn').addEventListener('click', () => {
+  setTodayPints(todayPints() + 1); renderWater();
+  const b = document.getElementById('wPlusBtn');
+  b.style.transform = 'scale(0.96)';
+  setTimeout(() => { b.style.transform = ''; }, 120);
+  if (typeof window.wtRender === 'function') window.wtRender();
+});
+document.getElementById('wMinusBtn').addEventListener('click', () => {
+  setTodayPints(Math.max(0, todayPints() - 1)); renderWater();
+});
+
+/* ═══════════════════════════════════════════════
+   SECTION B — FASTING TIMER
+═══════════════════════════════════════════════ */
+const FAST_KEY = 'nutrition_fast_v1';
+
+function loadFast() {
+  const s = ls(FAST_KEY);
+  if (s) return s;
+  return { isActive: false, startTime: null, log: [] };
+}
+function saveFast(s) { ls(FAST_KEY, s); }
+
+let fState      = loadFast();
+let fastInterval = null;
+
+function getFastLog() {
+  if (fState.log && fState.log.length > 0) return fState.log;
+  /* Seed mock history */
+  const P = [0, 14, 16, 16, 0, 18, 14, 16, 18, 14, 0, 16, 18, 16];
+  const mock = [];
+  for (let i = 13; i >= 1; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    mock.push({ date: dateKey(d), hours: P[i] || 0 });
+  }
+  return mock;
+}
+
+function fastStats() {
+  const log  = getFastLog().filter(e => e.hours > 0);
+  const last = log.length ? log[log.length - 1].hours : null;
+  const avg  = log.length ? log.reduce((s, e) => s + e.hours, 0) / log.length : null;
+  return { last, avg };
+}
+
+function renderFastStats() {
+  const { last, avg } = fastStats();
+  document.getElementById('fastLastVal').textContent = last != null ? fmtHours(last) : '—';
+  document.getElementById('fastAvgVal').textContent  = avg  != null ? fmtHours(avg)  : '—';
+}
+
+function tickFast() {
+  if (!fState.isActive || !fState.startTime) return;
+  const elapsed = Date.now() - new Date(fState.startTime).getTime();
+  document.getElementById('fastTimer').textContent = fmtDuration(elapsed);
+  const h = elapsed / 3600000;
+  document.getElementById('fastSub').textContent = 'Fasting for ' + fmtHours(h) + ' — stay strong';
+}
+
+function startFast() {
+  fState.isActive  = true;
+  fState.startTime = new Date().toISOString();
+  saveFast(fState);
+  document.getElementById('fastBadge').textContent  = 'Fasting';
+  document.getElementById('fastBadge').className    = 'fast-badge active';
+  document.getElementById('fastTimer').className    = 'fast-timer active';
+  document.getElementById('fastToggle').className   = 'fast-toggle running';
+  document.getElementById('fastToggleLabel').textContent = 'Stop Fast';
+  fastInterval = setInterval(tickFast, 1000);
+  tickFast();
+}
+
+function stopFast() {
+  if (!fState.startTime) return;
+  const hours = (Date.now() - new Date(fState.startTime).getTime()) / 3600000;
+  if (hours >= 0.05) {
+    fState.log = fState.log || [];
+    fState.log.push({ date: todayStr(), hours: Math.round(hours * 10) / 10 });
+    if (fState.log.length > 60) fState.log.shift();
+  }
+  fState.isActive = false; fState.startTime = null;
+  saveFast(fState);
+  clearInterval(fastInterval);
+  document.getElementById('fastBadge').textContent   = 'Eating Window';
+  document.getElementById('fastBadge').className     = 'fast-badge';
+  document.getElementById('fastTimer').textContent   = '00:00:00';
+  document.getElementById('fastTimer').className     = 'fast-timer';
+  document.getElementById('fastSub').textContent     = 'Fast ended — ' + fmtHours(hours) + ' logged';
+  document.getElementById('fastToggle').className    = 'fast-toggle idle';
+  document.getElementById('fastToggleLabel').textContent = 'Start Fast';
+  renderFastStats();
+  buildFastChart();
+}
+
+document.getElementById('fastToggle').addEventListener('click', () => {
+  if (fState.isActive) stopFast(); else startFast();
+});
+if (fState.isActive && fState.startTime) startFast();
+
+/* Fasting Chart */
+let fastChartInst = null;
+function buildFastChart() {
+  const canvas = document.getElementById('fastChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  const log    = getFastLog();
+  const labels = log.map(e => { const d = new Date(e.date + 'T00:00:00'); return ['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()]; });
+  const values = log.map(e => e.hours);
+  const ctx    = canvas.getContext('2d');
+  const grad   = ctx.createLinearGradient(0, 0, 0, 170);
+  grad.addColorStop(0,   'rgba(99,102,241,0.85)');
+  grad.addColorStop(0.5, 'rgba(99,102,241,0.40)');
+  grad.addColorStop(1,   'rgba(99,102,241,0.05)');
+  const glowPlugin = {
+    id: 'glow',
+    beforeDatasetsDraw(chart) {
+      chart.ctx.save();
+      chart.ctx.shadowBlur  = 16;
+      chart.ctx.shadowColor = 'rgba(99,102,241,0.65)';
+    },
+    afterDatasetsDraw(chart) { chart.ctx.restore(); }
+  };
+  if (fastChartInst) fastChartInst.destroy();
+  fastChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values, backgroundColor: grad,
+        borderRadius: 5, borderSkipped: false, barPercentage: 0.62
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 800, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(10,12,24,0.90)', borderColor: 'rgba(99,102,241,0.35)', borderWidth: 1,
+          titleColor: 'rgba(255,255,255,0.55)', bodyColor: '#a5b4fc',
+          callbacks: { label: ctx => ctx.parsed.y ? fmtHours(ctx.parsed.y) : 'No fast' }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,0.28)', font: { size: 10 }, maxRotation: 0 } },
+        y: { min: 0, max: 24, grid: { color: 'rgba(255,255,255,0.04)' }, border: { display: false },
+             ticks: { color: 'rgba(255,255,255,0.25)', font: { size: 10 }, stepSize: 8, callback: v => v + 'h' } }
+      }
+    },
+    plugins: [glowPlugin]
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION C — MEALS & MACROS (CRUD)
+   Storage: 'nutrition_meals'
+   Structure: { 'YYYY-MM-DD': { breakfast:[], lunch:[], dinner:[] } }
+═══════════════════════════════════════════════ */
+const MEALS_KEY = 'nutrition_meals';
+
+const MEALS_MOCK = {
+  breakfast: [
+    { id: uid(), name: 'Ribeye Steak',        kcal: 800, protein: 62, carbs: 0,   fat: 60  }
+  ],
+  lunch: [
+    { id: uid(), name: "Cabo Bob's Burrito",  kcal: 920, protein: 48, carbs: 102, fat: 28  }
+  ],
+  dinner: [
+    { id: uid(), name: "Domino's Pan Pizza",  kcal: 780, protein: 32, carbs: 88,  fat: 32  },
+    { id: uid(), name: 'Shake Shack Burger',  kcal: 650, protein: 35, carbs: 48,  fat: 38  }
+  ]
+};
+
+function loadMeals() {
+  const all = ls(MEALS_KEY) || {};
+  const today = todayStr();
+  if (!all[today]) {
+    all[today] = MEALS_MOCK;
+    ls(MEALS_KEY, all);
+  }
+  return all[today];
+}
+function saveMeals(dayData) {
+  const all = ls(MEALS_KEY) || {};
+  all[todayStr()] = dayData;
+  ls(MEALS_KEY, all);
+}
+
+/* In-memory editing state */
+let editingId  = null;
+let editingCat = null;
+
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function renderMeals() {
+  const data = loadMeals();
+  renderCategory('bfList', 'bfKcal', data.breakfast || [], 'breakfast');
+  renderCategory('luList', 'luKcal', data.lunch     || [], 'lunch');
+  renderCategory('diList', 'diKcal', data.dinner    || [], 'dinner');
+  renderMacroSummary(data);
+}
+
+function renderCategory(listId, kcalId, entries, cat) {
+  const container = document.getElementById(listId);
+  const kcalEl    = document.getElementById(kcalId);
+  container.innerHTML = '';
+  const totalKcal = entries.reduce((s, e) => s + (Number(e.kcal) || 0), 0);
+  if (kcalEl) kcalEl.textContent = totalKcal ? totalKcal.toLocaleString() + ' kcal' : '';
+
+  if (!entries.length) {
+    container.innerHTML = '<div class="meal-empty">No entries yet — add one above.</div>';
+    return;
+  }
+
+  entries.forEach(entry => {
+    if (editingId === entry.id && editingCat === cat) {
+      container.appendChild(buildEditForm(entry, cat));
+    } else {
+      container.appendChild(buildMealCard(entry, cat));
+    }
+  });
+}
+
+function buildMealCard(entry, cat) {
+  const div = document.createElement('div');
+  div.className = 'meal-entry';
+  div.innerHTML = `
+    <div class="meal-entry-body">
+      <div class="meal-entry-name">${escHtml(entry.name)}</div>
+      <div class="meal-entry-macros">
+        <span title="Protein">P <strong>${entry.protein}g</strong></span>
+        <span title="Carbs">C <strong>${entry.carbs}g</strong></span>
+        <span title="Fat">F <strong>${entry.fat}g</strong></span>
+      </div>
+    </div>
+    <div class="meal-entry-kcal">
+      ${Number(entry.kcal).toLocaleString()}
+      <span>kcal</span>
+    </div>
+    <div class="meal-entry-actions">
+      <button class="meal-btn edit" title="Edit">✏</button>
+      <button class="meal-btn del"  title="Delete">×</button>
+    </div>`;
+
+  div.querySelector('.meal-btn.edit').addEventListener('click', () => {
+    editingId  = entry.id;
+    editingCat = cat;
+    renderMeals();
+  });
+  div.querySelector('.meal-btn.del').addEventListener('click', () => {
+    const data = loadMeals();
+    data[cat] = (data[cat] || []).filter(e => e.id !== entry.id);
+    saveMeals(data);
+    if (editingId === entry.id) { editingId = null; editingCat = null; }
+    renderMeals();
+  });
+  return div;
+}
+
+function buildEditForm(entry, cat) {
+  const div = document.createElement('div');
+  div.className = 'meal-edit-form';
+  div.innerHTML = `
+    <div class="meal-edit-row">
+      <input type="text"   class="meal-edit-input name-inp" id="ei_name"    value="${escHtml(entry.name)}"  placeholder="Name">
+    </div>
+    <div class="meal-edit-macro-row">
+      <div>
+        <div class="macro-inp-label" style="color:#fb923c">Calories</div>
+        <input type="number" class="meal-edit-input" id="ei_kcal"    value="${entry.kcal}"    min="0" step="1">
+      </div>
+      <div>
+        <div class="macro-inp-label" style="color:#818cf8">Protein g</div>
+        <input type="number" class="meal-edit-input" id="ei_protein" value="${entry.protein}" min="0" step="0.1">
+      </div>
+      <div>
+        <div class="macro-inp-label" style="color:#fcd34d">Carbs g</div>
+        <input type="number" class="meal-edit-input" id="ei_carbs"   value="${entry.carbs}"   min="0" step="0.1">
+      </div>
+      <div>
+        <div class="macro-inp-label" style="color:#34d399">Fat g</div>
+        <input type="number" class="meal-edit-input" id="ei_fat"     value="${entry.fat}"     min="0" step="0.1">
+      </div>
+    </div>
+    <div class="meal-edit-actions">
+      <button class="edit-cancel-btn">Cancel</button>
+      <button class="edit-save-btn">Save Changes</button>
+    </div>`;
+
+  div.querySelector('.edit-cancel-btn').addEventListener('click', () => {
+    editingId = null; editingCat = null; renderMeals();
+  });
+  div.querySelector('.edit-save-btn').addEventListener('click', () => {
+    const name    = div.querySelector('#ei_name').value.trim();
+    const kcal    = parseFloat(div.querySelector('#ei_kcal').value)    || 0;
+    const protein = parseFloat(div.querySelector('#ei_protein').value) || 0;
+    const carbs   = parseFloat(div.querySelector('#ei_carbs').value)   || 0;
+    const fat     = parseFloat(div.querySelector('#ei_fat').value)     || 0;
+    if (!name) { div.querySelector('#ei_name').focus(); return; }
+    const data = loadMeals();
+    const idx  = (data[cat] || []).findIndex(e => e.id === entry.id);
+    if (idx >= 0) {
+      data[cat][idx] = { id: entry.id, name, kcal, protein, carbs, fat };
+      saveMeals(data);
+    }
+    editingId = null; editingCat = null;
+    renderMeals();
+  });
+  /* Auto-focus name */
+  setTimeout(() => { div.querySelector('#ei_name').focus(); }, 30);
+  return div;
+}
+
+function renderMacroSummary(data) {
+  const all = [
+    ...(data.breakfast || []),
+    ...(data.lunch     || []),
+    ...(data.dinner    || [])
+  ];
+  const kcal    = all.reduce((s, e) => s + (Number(e.kcal)    || 0), 0);
+  const protein = all.reduce((s, e) => s + (Number(e.protein) || 0), 0);
+  const carbs   = all.reduce((s, e) => s + (Number(e.carbs)   || 0), 0);
+  const fat     = all.reduce((s, e) => s + (Number(e.fat)     || 0), 0);
+
+  document.getElementById('totalKcal').textContent    = kcal.toLocaleString();
+  document.getElementById('totalProtein').textContent = protein.toFixed(0) + 'g';
+  document.getElementById('totalCarbs').textContent   = carbs.toFixed(0) + 'g';
+  document.getElementById('totalFat').textContent     = fat.toFixed(0) + 'g';
+
+  /* Macro proportional bar */
+  const macroTotal = protein * 4 + carbs * 4 + fat * 9 || 1;
+  const pPct = (protein * 4 / macroTotal * 100).toFixed(1);
+  const cPct = (carbs   * 4 / macroTotal * 100).toFixed(1);
+  const fPct = (fat     * 9 / macroTotal * 100).toFixed(1);
+  document.getElementById('macroBar').innerHTML =
+    `<div class="macro-summary-seg macro-seg-p" style="flex:${pPct}"></div>` +
+    `<div class="macro-summary-seg macro-seg-c" style="flex:${cPct}"></div>` +
+    `<div class="macro-summary-seg macro-seg-f" style="flex:${fPct}"></div>`;
+}
+
+/* ── Add Meal Panel ───────────────────────────── */
+const addTrigger = document.getElementById('addMealTrigger');
+const addPanel   = document.getElementById('addMealPanel');
+
+addTrigger.addEventListener('click', () => {
+  addPanel.classList.add('open');
+  addTrigger.style.display = 'none';
+  setTimeout(() => document.getElementById('addName').focus(), 30);
+});
+
+function closeAddPanel() {
+  addPanel.classList.remove('open');
+  addTrigger.style.display = '';
+  ['addName','addKcal','addProt','addCarb','addFat'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+document.getElementById('addCancelBtn').addEventListener('click', closeAddPanel);
+
+document.getElementById('addSaveBtn').addEventListener('click', () => {
+  const name    = document.getElementById('addName').value.trim();
+  const cat     = document.getElementById('addCat').value;
+  const kcal    = parseFloat(document.getElementById('addKcal').value)  || 0;
+  const protein = parseFloat(document.getElementById('addProt').value)  || 0;
+  const carbs   = parseFloat(document.getElementById('addCarb').value)  || 0;
+  const fat     = parseFloat(document.getElementById('addFat').value)   || 0;
+  if (!name) { document.getElementById('addName').focus(); return; }
+  const data = loadMeals();
+  if (!data[cat]) data[cat] = [];
+  data[cat].push({ id: uid(), name, kcal, protein, carbs, fat });
+  saveMeals(data);
+  closeAddPanel();
+  renderMeals();
+  /* Scroll to category */
+  const targets = { breakfast:'bfList', lunch:'luList', dinner:'diList' };
+  const el = document.getElementById(targets[cat]);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+});
+
+/* Enter key in name field submits */
+document.getElementById('addName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('addSaveBtn').click(); }
+});
+
+/* ─────────────────────────────────────────────
+   BOOT
+───────────────────────────────────────────── */
+renderWater();
+renderFastStats();
+renderMeals();
+requestAnimationFrame(buildFastChart);
+
+})();
+</script>
+<script src="themes.js"></script>
+</body>
+</html>
+

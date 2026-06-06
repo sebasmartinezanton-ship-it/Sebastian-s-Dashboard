@@ -1,0 +1,936 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06080f">
+<meta name="color-scheme" content="dark">
+<title>Fitbit · Health</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="theme.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --text-primary:   #FAFAFA;
+  --text-secondary: #B8B6B0;
+  --text-tertiary:  #76746E;
+  --success: #6BE3A4;
+  --warning: #F2C063;
+  --danger:  #FF6B6B;
+  --fitbit:  #00B0B9;
+  --fitbit-hi: #00C8D2;
+  --fitbit-glow: rgba(0,176,185,0.45);
+  --font-body: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+body {
+  color: var(--text-primary); font-family: var(--font-body);
+  min-height: 100vh; overflow-x: hidden;
+  padding: max(24px, env(safe-area-inset-top)) 20px;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; filter: blur(40px);
+  animation: bgDrift 36s ease-in-out infinite alternate;
+  pointer-events: none; z-index: 0;
+}
+@keyframes bgDrift {
+  0%   { transform: translate(0,0) scale(1); }
+  50%  { transform: translate(10px,-6px) scale(1.03); }
+  100% { transform: translate(-6px,8px) scale(0.98); }
+}
+.page-wrap { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+
+/* ── Chrome ──────────────────────────────────────────── */
+.day-pill {
+  display: inline-flex; align-items: center;
+  padding: 5px 12px; border-radius: 999px; margin-bottom: 8px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary);
+}
+.page-title {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.025em;
+  background: linear-gradient(180deg, #FFFFFF 0%, #C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; margin-bottom: 22px;
+}
+
+/* ── Glass card base ─────────────────────────────────── */
+.glass-card {
+  background: rgba(15,23,42,0.40);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px; padding: 20px 22px; margin-bottom: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.04);
+  position: relative; overflow: hidden;
+}
+.glass-card::before {
+  content: ''; position: absolute; top: 0; left: 14px; right: 14px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   SETUP CARD
+═══════════════════════════════════════════ */
+#setupCard {
+  background: rgba(0,176,185,0.05);
+  border-color: rgba(0,176,185,0.18);
+}
+.setup-brand {
+  display: inline-flex; align-items: center; gap: 10px; margin-bottom: 18px;
+}
+.setup-brand-mark {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--fitbit), var(--fitbit-hi));
+  color: #0a0c0d; font-weight: 900; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 18px var(--fitbit-glow);
+}
+.setup-brand-text {
+  font-size: 18px; font-weight: 800; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--fitbit-hi);
+}
+.setup-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+.setup-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 18px; }
+.setup-steps {
+  background: rgba(0,0,0,0.20); border-radius: 12px; padding: 16px 18px;
+  margin-bottom: 18px; counter-reset: steps;
+}
+.setup-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  font-size: 13px; color: var(--text-secondary); line-height: 1.55;
+  margin-bottom: 10px; counter-increment: steps;
+}
+.setup-step:last-child { margin-bottom: 0; }
+.setup-step::before {
+  content: counter(steps); flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,176,185,0.15); border: 1px solid rgba(0,176,185,0.30);
+  color: var(--fitbit-hi); font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.setup-step code {
+  background: rgba(0,176,185,0.10); padding: 1px 6px; border-radius: 5px;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--fitbit-hi);
+}
+.redirect-box {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(0,176,185,0.06); border: 1px solid rgba(0,176,185,0.18);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 18px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--fitbit-hi);
+  word-break: break-all;
+}
+.redirect-copy {
+  flex-shrink: 0; background: rgba(0,176,185,0.14); border: 1px solid rgba(0,176,185,0.30);
+  color: var(--fitbit-hi); font-family: inherit; font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+  transition: background .15s;
+}
+.redirect-copy:hover { background: rgba(0,176,185,0.25); }
+
+.setup-field { margin-bottom: 14px; }
+.setup-label {
+  display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 7px;
+  font-family: var(--font-mono);
+}
+.setup-input {
+  width: 100%; background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 11px; color: var(--text-primary); font-family: var(--font-mono);
+  font-size: 13px; padding: 12px 14px; outline: none; transition: border-color .2s;
+}
+.setup-input:focus { border-color: rgba(0,176,185,0.55); }
+.setup-input::placeholder { color: var(--text-tertiary); }
+
+.connect-btn {
+  width: 100%; padding: 14px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(0,176,185,0.22), rgba(0,140,148,0.28));
+  border: 1px solid rgba(0,176,185,0.50); color: var(--fitbit-hi);
+  font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 0 28px rgba(0,176,185,0.14), inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: background .2s, box-shadow .2s, transform .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.connect-btn:hover {
+  background: linear-gradient(135deg, rgba(0,176,185,0.34), rgba(0,140,148,0.38));
+  box-shadow: 0 0 40px rgba(0,176,185,0.22);
+}
+.connect-btn:active { transform: scale(0.98); }
+
+/* ═══════════════════════════════════════════
+   CONNECTED STATE
+═══════════════════════════════════════════ */
+.fb-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 20px;
+}
+.fb-brand { display: inline-flex; align-items: center; gap: 8px; }
+.fb-brand-mark {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--fitbit), var(--fitbit-hi));
+  color: #0a0c0d; font-weight: 900; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 12px var(--fitbit-glow);
+}
+.fb-brand-name { font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.fb-live-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--fitbit-hi);
+}
+.fb-live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--fitbit-hi); box-shadow: 0 0 8px var(--fitbit-glow);
+  animation: fbPulse 1.6s ease-in-out infinite;
+}
+@keyframes fbPulse {
+  0%,100%{ opacity:1; transform:scale(1); }
+  50%    { opacity:0.5; transform:scale(0.82); }
+}
+.fb-header-right { display: flex; align-items: center; gap: 10px; }
+.fb-updated { font-size: 10.5px; color: var(--text-tertiary); font-family: var(--font-mono); }
+.fb-refresh-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04);
+  color: var(--text-secondary); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .18s, color .18s, transform .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.fb-refresh-btn:hover { background: rgba(255,255,255,0.10); color: var(--text-primary); }
+.fb-refresh-btn.spinning { animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error banner */
+.fb-error {
+  display: none; margin-bottom: 14px; padding: 10px 14px;
+  background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.28);
+  border-radius: 10px; color: #ff8a8a; font-size: 12px; line-height: 1.5;
+}
+.fb-error.show { display: block; }
+
+/* Sleep score ring */
+.ring-wrap {
+  position: relative; width: 200px; max-width: 68%;
+  margin: 0 auto 22px; aspect-ratio: 1;
+}
+.ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 12; }
+.ring-fill {
+  fill: none; stroke: var(--fitbit); stroke-width: 12; stroke-linecap: round;
+  stroke-dasharray: 502.65; stroke-dashoffset: 502.65;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1), stroke .4s;
+}
+.ring-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none; text-align: center;
+}
+.ring-num  { font-size: 52px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.ring-unit { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-tertiary); margin-top: 6px; }
+.ring-lbl  { font-size: 12px; font-weight: 600; margin-top: 4px; }
+
+/* Sleep stages */
+.stages { padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
+.stages-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.stages-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-tertiary); font-family: var(--font-mono); }
+.stages-meta { font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }
+.stages-bar {
+  display: flex; height: 8px; border-radius: 4px; overflow: hidden;
+  background: rgba(255,255,255,0.04); margin-bottom: 12px; gap: 1px;
+}
+.stage-seg { height: 100%; transition: width 0.7s cubic-bezier(0.22,1,0.36,1); }
+.seg-rem   { background: #00C8D2; }
+.seg-deep  { background: #0087A0; }
+.seg-light { background: #3A6B72; }
+.seg-awake { background: rgba(255,255,255,0.12); }
+.stages-legend { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+.stage-leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
+.stage-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.stage-mins { margin-left: auto; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-primary); }
+@media (max-width: 480px) { .stages-legend { grid-template-columns: repeat(2,1fr); } }
+
+/* Stats grid */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 8px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 10px;
+}
+@media (max-width: 480px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+.stat-box {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px; padding: 12px 10px; text-align: center;
+  position: relative; transition: background .18s, border-color .18s;
+}
+.stat-box:hover { background: rgba(255,255,255,0.055); }
+.stat-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 8px; font-family: var(--font-mono); }
+.stat-value { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+.stat-sub   { font-size: 9.5px; color: var(--text-tertiary); margin-top: 4px; font-family: var(--font-mono); }
+.zone-dot {
+  position: absolute; top: 8px; right: 8px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.10); transition: background .3s, box-shadow .3s;
+}
+.z-good { background: #6BE3A4 !important; box-shadow: 0 0 7px rgba(107,227,164,0.60) !important; }
+.z-norm { background: rgba(255,255,255,0.30) !important; }
+.z-warn { background: #F2C063 !important; box-shadow: 0 0 7px rgba(242,192,99,0.55) !important; }
+.z-bad  { background: #FF6B6B !important; box-shadow: 0 0 7px rgba(255,107,107,0.55) !important; }
+
+/* Biomarkers */
+.bio-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
+@media (max-width: 380px) { .bio-row { grid-template-columns: 1fr; } }
+.bio-box {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px; padding: 11px 12px; text-align: center; position: relative;
+}
+.bio-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 5px; font-family: var(--font-mono); }
+.bio-val   { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Zone legend */
+.zone-legend {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 14px;
+  margin-top: 14px; padding: 9px 12px;
+  background: rgba(255,255,255,0.02); border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.zone-leg-item { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 600; color: var(--text-tertiary); }
+.zone-leg-dot  { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+/* Verdict */
+.verdict {
+  margin-top: 16px; padding: 16px 18px;
+  background: rgba(255,255,255,0.025); border-radius: 12px;
+  border-left: 3px solid rgba(0,176,185,0.45);
+}
+.verdict-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.verdict-eyebrow { font-size: 9.5px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 700; font-family: var(--font-mono); }
+.verdict-badge { font-size: 9.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid; }
+.verdict-headline { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.45; margin-bottom: 8px; }
+.verdict-notes { font-size: 12.5px; color: var(--text-secondary); line-height: 1.65; }
+.verdict-avoid { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.06); }
+.verdict-avoid-label { color: #FF6B6B; font-weight: 700; }
+
+/* Disconnect */
+.disconnect-btn {
+  display: block; margin: 16px auto 0; padding: 7px 16px;
+  background: transparent; border: 1px solid transparent;
+  color: var(--text-tertiary); font-family: inherit; font-size: 11px;
+  border-radius: 999px; cursor: pointer; transition: color .15s, border-color .15s;
+}
+.disconnect-btn:hover { color: var(--text-secondary); border-color: rgba(255,255,255,0.10); }
+</style>
+  <link rel="stylesheet" href="themes.css">
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div class="day-pill" id="dayPill">—</div>
+  <h1 class="page-title">Fitbit Health</h1>
+
+  <!-- ════════════ SETUP ════════════ -->
+  <div class="glass-card" id="setupCard">
+    <div class="setup-brand">
+      <div class="setup-brand-mark">F</div>
+      <span class="setup-brand-text">FITBIT</span>
+    </div>
+    <div class="setup-title">Connect Google Fit</div>
+    <div class="setup-sub">Links your Google account so your Fitbit data — sleep, steps, heart rate, and more — appears here on your dashboard.</div>
+
+    <div class="setup-steps">
+      <div class="setup-step">Make sure your <strong>Fitbit app</strong> has Google Fit sync enabled (Fitbit app → Today tab → Profile → Google Fit)</div>
+      <div class="setup-step">Hit <strong>Connect</strong> below and sign in with the Google account linked to your Fitbit</div>
+      <div class="setup-step">Approve the permissions — you'll be sent straight back here with your stats loaded</div>
+    </div>
+
+    <button class="connect-btn" id="connectBtn" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Connect Google Fit
+    </button>
+
+    <div id="authStatus" style="margin-top:10px;font-size:11px;color:var(--text-tertiary);text-align:center;min-height:14px;font-style:italic"></div>
+  </div>
+
+  <!-- ════════════ CONNECTED ════════════ -->
+  <div id="connectedView" style="display:none">
+
+    <div class="glass-card">
+      <!-- Header -->
+      <div class="fb-header">
+        <div class="fb-brand">
+          <div class="fb-brand-mark">F</div>
+          <span class="fb-brand-name">FITBIT</span>
+          <span class="fb-live-tag"><span class="fb-live-dot"></span>live</span>
+        </div>
+        <div class="fb-header-right">
+          <span class="fb-updated" id="updatedLabel">loading…</span>
+          <button class="fb-refresh-btn" id="refreshBtn" title="Refresh" aria-label="Refresh">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15A9 9 0 1 1 5.64 5.64L23 10"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="fb-error" id="errorBanner"></div>
+
+      <!-- Sleep score ring -->
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 180 180" aria-hidden="true">
+          <circle class="ring-track" cx="90" cy="90" r="80"/>
+          <circle class="ring-fill" cx="90" cy="90" r="80" id="scoreRing"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-num" id="scoreNum">—</div>
+          <div class="ring-unit">sleep score</div>
+          <div class="ring-lbl" id="scoreLbl">—</div>
+        </div>
+      </div>
+
+      <!-- Sleep stages -->
+      <div class="stages" id="stagesWrap" style="display:none">
+        <div class="stages-head">
+          <span class="stages-eyebrow">Sleep stages</span>
+          <span class="stages-meta" id="stagesMeta">—</span>
+        </div>
+        <div class="stages-bar">
+          <div class="stage-seg seg-rem"   id="segRem"   style="width:0%"></div>
+          <div class="stage-seg seg-deep"  id="segDeep"  style="width:0%"></div>
+          <div class="stage-seg seg-light" id="segLight" style="width:0%"></div>
+          <div class="stage-seg seg-awake" id="segAwake" style="width:0%"></div>
+        </div>
+        <div class="stages-legend">
+          <div class="stage-leg"><span class="stage-dot" style="background:#00C8D2"></span>REM<span class="stage-mins" id="legRem">—</span></div>
+          <div class="stage-leg"><span class="stage-dot" style="background:#0087A0"></span>Deep<span class="stage-mins" id="legDeep">—</span></div>
+          <div class="stage-leg"><span class="stage-dot" style="background:#3A6B72"></span>Light<span class="stage-mins" id="legLight">—</span></div>
+          <div class="stage-leg"><span class="stage-dot" style="background:rgba(255,255,255,.12)"></span>Awake<span class="stage-mins" id="legAwake">—</span></div>
+        </div>
+      </div>
+
+      <!-- Stats grid -->
+      <div class="stats-grid">
+        <div class="stat-box"><span class="zone-dot" id="zSleep"></span><div class="stat-label">Sleep</div><div class="stat-value" id="statSleep">—</div><div class="stat-sub" id="statSleepSub">—</div></div>
+        <div class="stat-box"><span class="zone-dot" id="zSteps"></span><div class="stat-label">Steps</div><div class="stat-value" id="statSteps">—</div><div class="stat-sub">today</div></div>
+        <div class="stat-box"><span class="zone-dot" id="zRhr"></span><div class="stat-label">Resting HR</div><div class="stat-value" id="statRhr">—</div><div class="stat-sub">bpm</div></div>
+        <div class="stat-box"><span class="zone-dot" id="zAzm"></span><div class="stat-label">Active Min</div><div class="stat-value" id="statAzm">—</div><div class="stat-sub">today</div></div>
+      </div>
+
+      <!-- Biomarkers -->
+      <div class="bio-row" id="bioRow" style="display:none">
+        <div class="bio-box"><span class="zone-dot" id="zCals"></span><div class="bio-label">Calories</div><div class="bio-val" id="statCals">—</div></div>
+        <div class="bio-box"><span class="zone-dot" id="zDist"></span><div class="bio-label">Distance</div><div class="bio-val" id="statDist">—</div></div>
+        <div class="bio-box"><span class="zone-dot" id="zFloors"></span><div class="bio-label">Floors</div><div class="bio-val" id="statFloors">—</div></div>
+      </div>
+
+      <!-- Zone legend -->
+      <div class="zone-legend">
+        <span class="zone-leg-item"><span class="zone-leg-dot z-good"></span>Great</span>
+        <span class="zone-leg-item"><span class="zone-leg-dot z-norm"></span>Normal</span>
+        <span class="zone-leg-item"><span class="zone-leg-dot z-warn"></span>Watch</span>
+        <span class="zone-leg-item"><span class="zone-leg-dot z-bad"></span>Low/High</span>
+      </div>
+
+      <!-- Verdict -->
+      <div class="verdict" id="verdictWrap" style="display:none">
+        <div class="verdict-head">
+          <span class="verdict-eyebrow">Today's call</span>
+          <span class="verdict-badge" id="verdictBadge"></span>
+        </div>
+        <div class="verdict-headline" id="verdictHead"></div>
+        <div class="verdict-notes"    id="verdictNotes"></div>
+        <div class="verdict-avoid" id="verdictAvoid" style="display:none">
+          <span class="verdict-avoid-label">Avoid today: </span><span id="verdictAvoidText"></span>
+        </div>
+      </div>
+
+      <button class="disconnect-btn" id="disconnectBtn" type="button">Disconnect Fitbit</button>
+    </div>
+
+  </div><!-- /connectedView -->
+
+</div><!-- /page-wrap -->
+
+<script src="topbar.js" defer></script>
+<nav class="tabbar" role="navigation" aria-label="Main navigation">
+  <div class="tabbar-inner">
+    <a href="index.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      <span class="tab-label">Dashboard</span>
+    </a>
+    <a href="nutrition.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="8"/><line x1="10" y1="2" x2="10" y2="8"/><line x1="14" y1="2" x2="14" y2="8"/></svg></span>
+      <span class="tab-label">Nutrition</span>
+    </a>
+    <a href="gym.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="12" x2="18" y2="12"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/><line x1="3" y1="9" x2="3" y2="15"/><line x1="21" y1="9" x2="21" y2="15"/></svg></span>
+      <span class="tab-label">Gym</span>
+    </a>
+    <a href="finance.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
+      <span class="tab-label">Finances</span>
+    </a>
+    <a href="social.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      <span class="tab-label">Social</span>
+    </a>
+    <a href="hygiene.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      <span class="tab-label">Hygiene</span>
+    </a>
+    <a href="fitbit.html" class="tab" aria-current="page">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+      <span class="tab-label">Fitbit</span>
+    </a>
+  </div>
+</nav>
+
+<script>
+(function () {
+'use strict';
+
+/* ─────────────────────────────────────────────
+   CONSTANTS & KEYS
+───────────────────────────────────────────── */
+const GFIT_BASE = 'https://www.googleapis.com/fitness/v1/users/me';
+
+const LS_TOKEN   = 'fb_access_token';
+const LS_EXPIRY  = 'fb_token_expiry';
+const LS_REFRESH = 'fb_refresh_token';
+const LS_CACHE   = 'fb_cached_data';
+
+/* ─────────────────────────────────────────────
+   DAY PILL
+───────────────────────────────────────────── */
+(function() {
+  const d = new Date();
+  const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('dayPill').textContent =
+    DAYS[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate();
+})();
+
+/* ─────────────────────────────────────────────
+   AUTH
+───────────────────────────────────────────── */
+function getToken()   { return localStorage.getItem(LS_TOKEN); }
+function getExpiry()  { return parseInt(localStorage.getItem(LS_EXPIRY) || '0', 10); }
+function getRefresh() { return localStorage.getItem(LS_REFRESH) || ''; }
+function isTokenValid() { return !!getToken() && Date.now() < getExpiry() - 30000; }
+
+function startAuth() {
+  window.location.href = '/api/fitbit-auth';
+}
+
+function handleHashTokens() {
+  if (!window.location.hash || window.location.hash.length < 2) return false;
+  const params = new URLSearchParams(window.location.hash.slice(1));
+
+  // Google OAuth callback format: at=TOKEN&rt=REFRESH&exp=TIMESTAMP
+  const at = params.get('at');
+  if (at) {
+    const expiry = parseInt(params.get('exp') || '0', 10);
+    const rt     = params.get('rt') || '';
+    localStorage.setItem(LS_TOKEN,   at);
+    localStorage.setItem(LS_EXPIRY,  String(expiry || Date.now() + 3600000));
+    localStorage.setItem(LS_REFRESH, rt);
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setStatus('');
+    return true;
+  }
+  return false;
+}
+
+function handleQueryError() {
+  const params = new URLSearchParams(window.location.search);
+  const err = params.get('auth_error');
+  if (err) {
+    showError('Auth failed: ' + decodeURIComponent(err));
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+async function refreshAccessToken() {
+  const rt = getRefresh();
+  if (!rt) throw new Error('No refresh token — please reconnect');
+  const resp = await fetch('/api/fitbit-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: rt })
+  });
+  const data = await resp.json();
+  if (!resp.ok || !data.access_token) throw new Error(data.error || 'Token refresh failed');
+  const expiry = Date.now() + (data.expires_in || 3600) * 1000;
+  localStorage.setItem(LS_TOKEN,  data.access_token);
+  localStorage.setItem(LS_EXPIRY, String(expiry));
+  if (data.refresh_token) localStorage.setItem(LS_REFRESH, data.refresh_token);
+}
+
+async function ensureValidToken() {
+  if (isTokenValid()) return;
+  await refreshAccessToken();
+}
+
+function disconnect() {
+  [LS_TOKEN, LS_EXPIRY, LS_REFRESH, LS_CACHE].forEach(k => localStorage.removeItem(k));
+  document.getElementById('connectedView').style.display = 'none';
+  document.getElementById('setupCard').style.display     = '';
+  showError('');
+}
+
+function setStatus(msg) {
+  document.getElementById('authStatus').textContent = msg;
+}
+
+/* ─────────────────────────────────────────────
+   GOOGLE FIT API
+───────────────────────────────────────────── */
+async function gfitAggregate(dataTypeName, startMs, endMs) {
+  await ensureValidToken();
+  const token = getToken();
+  const resp = await fetch(GFIT_BASE + '/dataset:aggregate', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      aggregateBy: [{ dataTypeName }],
+      bucketByTime: { durationMillis: endMs - startMs },
+      startTimeMillis: startMs,
+      endTimeMillis: endMs,
+    }),
+  });
+  if (resp.status === 401) { localStorage.removeItem(LS_TOKEN); throw new Error('Session expired — please reconnect'); }
+  if (!resp.ok) throw new Error('Google Fit error ' + resp.status);
+  return resp.json();
+}
+
+async function gfitSessions(startMs, endMs, activityType) {
+  await ensureValidToken();
+  const token = getToken();
+  const resp = await fetch(GFIT_BASE + '/sessions?' + new URLSearchParams({
+    startTime: new Date(startMs).toISOString(),
+    endTime:   new Date(endMs).toISOString(),
+    activityType,
+  }), { headers: { Authorization: 'Bearer ' + token } });
+  if (resp.status === 401) { localStorage.removeItem(LS_TOKEN); throw new Error('Session expired — please reconnect'); }
+  if (!resp.ok) throw new Error('Google Fit sessions error ' + resp.status);
+  return resp.json();
+}
+
+async function fetchAll() {
+  const now = Date.now();
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const startMs = todayStart.getTime();
+  const ydayStart = new Date(todayStart); ydayStart.setDate(ydayStart.getDate() - 1);
+
+  const settle = p => p.then(v => ({ ok: true, v })).catch(e => ({ ok: false, e: e.message }));
+
+  const [stepsR, hrR, calsR, activeR, distR, sleepR] = await Promise.all([
+    settle(gfitAggregate('com.google.step_count.delta',   startMs, now)),
+    settle(gfitAggregate('com.google.heart_rate.bpm',     startMs, now)),
+    settle(gfitAggregate('com.google.calories.expended',  startMs, now)),
+    settle(gfitAggregate('com.google.active_minutes',     startMs, now)),
+    settle(gfitAggregate('com.google.distance.delta',     startMs, now)),
+    settle(gfitSessions(ydayStart.getTime(), now, 72)),
+  ]);
+
+  return { stepsR, hrR, calsR, activeR, distR, sleepR,
+    errors: [stepsR, hrR, calsR, activeR, distR, sleepR].filter(r => !r.ok).map(r => r.e) };
+}
+
+/* ─────────────────────────────────────────────
+   PARSE GOOGLE FIT RESPONSE
+───────────────────────────────────────────── */
+function bucketSum(data) {
+  const pts = (data.bucket && data.bucket[0] &&
+               data.bucket[0].dataset && data.bucket[0].dataset[0] &&
+               data.bucket[0].dataset[0].point) || [];
+  let sum = 0, count = 0;
+  for (const p of pts) {
+    const v = p.value && p.value[0];
+    if (v) { sum += (v.intVal != null ? v.intVal : v.fpVal || 0); count++; }
+  }
+  return count > 0 ? sum : null;
+}
+
+function bucketMinAvg(data) {
+  const pts = (data.bucket && data.bucket[0] &&
+               data.bucket[0].dataset && data.bucket[0].dataset[0] &&
+               data.bucket[0].dataset[0].point) || [];
+  const vals = pts.map(p => {
+    const v = p.value && p.value[0];
+    return v ? (v.fpVal != null ? v.fpVal : v.intVal) : null;
+  }).filter(x => x != null);
+  if (!vals.length) return { min: null, avg: null };
+  return {
+    min: Math.round(Math.min(...vals)),
+    avg: Math.round(vals.reduce((a, b) => a + b, 0) / vals.length),
+  };
+}
+
+function parse(raw) {
+  const d = {};
+
+  if (raw.stepsR.ok) { const v = bucketSum(raw.stepsR.v); if (v != null) d.steps = Math.round(v); }
+
+  if (raw.hrR.ok) {
+    const { min, avg } = bucketMinAvg(raw.hrR.v);
+    // Use minimum as resting HR approximation; fall back to average
+    d.rhr = min != null ? min : avg;
+  }
+
+  if (raw.calsR.ok)  { const v = bucketSum(raw.calsR.v);  if (v != null) d.cals = Math.round(v); }
+  if (raw.activeR.ok){ const v = bucketSum(raw.activeR.v); if (v != null) d.azm  = Math.round(v); }
+  if (raw.distR.ok)  { const v = bucketSum(raw.distR.v);   if (v != null) d.dist = Math.round(v / 100) / 10; }
+
+  if (raw.sleepR.ok && raw.sleepR.v.session && raw.sleepR.v.session.length) {
+    const sessions = raw.sleepR.v.session;
+    const totalMs = sessions.reduce((s, sess) =>
+      s + (parseInt(sess.endTimeMillis) - parseInt(sess.startTimeMillis)), 0);
+    if (totalMs > 0) {
+      d.sleepMin = Math.round(totalMs / 60000);
+      const h = d.sleepMin / 60;
+      d.sleepScore = h >= 8 ? 90 : h >= 7 ? 80 : h >= 6 ? 65 : h >= 5 ? 50 : 35;
+    }
+  }
+
+  return d;
+}
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function txt(id, v) { const e = document.getElementById(id); if (e) e.textContent = v != null ? v : '—'; }
+function fmtMin(m)  { if (!m) return '—'; const h = Math.floor(m/60), mn = m%60; return h > 0 ? h+'h '+mn+'m' : mn+'m'; }
+function showError(msg) {
+  const el = document.getElementById('errorBanner');
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+function zone(id, cls) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  e.className = 'zone-dot ' + (cls || '');
+}
+
+const zSteps = v => v == null ? '' : v >= 10000 ? 'z-good' : v >= 6000 ? 'z-norm' : v >= 3000 ? 'z-warn' : 'z-bad';
+const zRhr   = v => !v       ? '' : v <= 60    ? 'z-good' : v <= 70   ? 'z-norm' : v <= 80   ? 'z-warn' : 'z-bad';
+const zAzm   = v => v == null ? '' : v >= 22   ? 'z-good' : v >= 10   ? 'z-norm' : v >= 5    ? 'z-warn' : 'z-bad';
+const zScore = s =>             s >= 80        ? 'z-good' : s >= 60   ? 'z-norm' : s >= 40   ? 'z-warn' : 'z-bad';
+
+/* ─────────────────────────────────────────────
+   RENDER
+───────────────────────────────────────────── */
+function render(d) {
+  document.getElementById('setupCard').style.display     = 'none';
+  document.getElementById('connectedView').style.display = '';
+  txt('updatedLabel', 'Updated ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }));
+
+  const score  = d.sleepScore != null ? d.sleepScore : 0;
+  const zone_s = zScore(score);
+  const COLORS = { 'z-good':'#6BE3A4', 'z-norm':'#00C8D2', 'z-warn':'#F2C063', 'z-bad':'#FF6B6B' };
+  const LABELS = { 'z-good':'Excellent', 'z-norm':'Good', 'z-warn':'Fair', 'z-bad':'Poor' };
+  const color  = COLORS[zone_s] || '#00C8D2';
+
+  // Ring
+  const circ = 2 * Math.PI * 80;
+  const ring  = document.getElementById('scoreRing');
+  ring.style.strokeDasharray  = circ;
+  ring.style.strokeDashoffset = circ - (score / 100) * circ;
+  ring.style.stroke  = color;
+  ring.style.filter  = 'drop-shadow(0 0 14px ' + color + '55)';
+  txt('scoreNum', d.sleepScore != null ? d.sleepScore : '—');
+  const lbl = document.getElementById('scoreLbl');
+  lbl.textContent = d.sleepScore != null ? LABELS[zone_s] : '—';
+  lbl.style.color = color;
+
+  // Sleep stat
+  txt('statSleep',    fmtMin(d.sleepMin));
+  txt('statSleepSub', d.sleepMin != null ? Math.floor(d.sleepMin/60) + 'h ' + (d.sleepMin%60) + 'm' : '—');
+  zone('zSleep', zone_s);
+
+  // Activity stats
+  txt('statSteps', d.steps  != null ? d.steps.toLocaleString() : '—');
+  txt('statRhr',   d.rhr    != null ? d.rhr   : '—');
+  txt('statAzm',   d.azm    != null ? d.azm   : '—');
+  zone('zSteps', zSteps(d.steps));
+  zone('zRhr',   zRhr(d.rhr));
+  zone('zAzm',   zAzm(d.azm));
+
+  // Sleep stages
+  if (d.sleepRem != null) {
+    const total = (d.sleepRem||0) + (d.sleepDeep||0) + (d.sleepLight||0) + (d.sleepAwake||0);
+    if (total > 0) {
+      document.getElementById('stagesWrap').style.display = '';
+      txt('stagesMeta', fmtMin(d.sleepMin) + ' asleep');
+      const pct = x => Math.max(0, Math.min(100, x / total * 100)).toFixed(1) + '%';
+      document.getElementById('segRem').style.width   = pct(d.sleepRem||0);
+      document.getElementById('segDeep').style.width  = pct(d.sleepDeep||0);
+      document.getElementById('segLight').style.width = pct(d.sleepLight||0);
+      document.getElementById('segAwake').style.width = pct(d.sleepAwake||0);
+      txt('legRem',   fmtMin(d.sleepRem));
+      txt('legDeep',  fmtMin(d.sleepDeep));
+      txt('legLight', fmtMin(d.sleepLight));
+      txt('legAwake', fmtMin(d.sleepAwake));
+    }
+  }
+
+  // Biomarkers
+  if (d.cals != null || d.dist != null || d.floors != null) {
+    document.getElementById('bioRow').style.display = 'grid';
+    txt('statCals',   d.cals   != null ? d.cals.toLocaleString() + ' kcal' : '—');
+    txt('statDist',   d.dist   != null ? d.dist + ' km'                    : '—');
+    txt('statFloors', d.floors != null ? d.floors                          : '—');
+  }
+
+  renderVerdict(d, score, zone_s, COLORS, LABELS);
+
+  // Cache for dashboard widget
+  try { localStorage.setItem(LS_CACHE, JSON.stringify({ ts: Date.now(), d })); } catch {}
+}
+
+function renderVerdict(d, score, zone_s, COLORS, LABELS) {
+  const configs = {
+    'z-good': { label:'GREAT', bg:'rgba(107,227,164,0.12)', border:'rgba(107,227,164,0.35)', color:'#6BE3A4', head:'Well-rested. Push hard today.' },
+    'z-norm': { label:'GOOD',  bg:'rgba(0,200,210,0.10)',   border:'rgba(0,200,210,0.30)',   color:'#00C8D2', head:'Decent sleep. Moderate-to-hard training is fine.' },
+    'z-warn': { label:'FAIR',  bg:'rgba(242,192,99,0.10)',  border:'rgba(242,192,99,0.32)',  color:'#F2C063', head:'Below-average sleep. Keep intensity moderate.', avoid:'Max-effort lifting or high-intensity cardio.' },
+    'z-bad':  { label:'REST',  bg:'rgba(255,107,107,0.10)', border:'rgba(255,107,107,0.32)', color:'#FF6B6B', head:'Poor sleep. Prioritise recovery today.',         avoid:'Intense training — choose light movement or full rest.' }
+  };
+  const c  = configs[zone_s] || configs['z-norm'];
+  const vw = document.getElementById('verdictWrap');
+  const badge = document.getElementById('verdictBadge');
+  vw.style.display = '';
+  badge.textContent    = c.label;
+  badge.style.cssText  = 'background:' + c.bg + ';border-color:' + c.border + ';color:' + c.color;
+  txt('verdictHead', c.head);
+  const notes = [];
+  if (d.sleepMin  != null && d.sleepMin  < 360)  notes.push('Under 6 hours of sleep logged.');
+  if (d.rhr       != null && d.rhr       > 72)   notes.push('Resting HR slightly elevated.');
+  if (d.steps     != null && d.steps     >= 10000) notes.push('Step goal hit — great work!');
+  if (d.azm       != null && d.azm       >= 22)  notes.push('Active minutes on track.');
+  txt('verdictNotes', notes.join(' ') || (score >= 80 ? 'All metrics look strong.' : ''));
+  const avoidEl = document.getElementById('verdictAvoid');
+  if (c.avoid) { avoidEl.style.display = ''; txt('verdictAvoidText', c.avoid); }
+  else          { avoidEl.style.display = 'none'; }
+}
+
+/* ─────────────────────────────────────────────
+   CROSS-DEVICE TOKEN SYNC (Vercel KV)
+───────────────────────────────────────────── */
+async function syncTokenToKV(token, expiry) {
+  try {
+    await fetch('/api/fitbit-sync', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_token: token, expiry }),
+    });
+  } catch {}
+}
+
+async function tryLoadFromKV() {
+  try {
+    const r = await fetch('/api/fitbit-sync');
+    if (!r.ok) return false;
+    const data = await r.json();
+    if (data.access_token && data.expiry > Date.now() + 30000) {
+      localStorage.setItem(LS_TOKEN,  data.access_token);
+      localStorage.setItem(LS_EXPIRY, String(data.expiry));
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+/* ─────────────────────────────────────────────
+   REFRESH LOOP
+───────────────────────────────────────────── */
+let refreshTimer = null;
+
+async function refresh() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) btn.classList.add('spinning');
+  showError('');
+  try {
+    const raw = await fetchAll();
+    if (raw.errors.length === 3) {
+      throw new Error(raw.errors[0] || 'All API calls failed');
+    }
+    if (raw.errors.length > 0) {
+      showError('Partial data: ' + raw.errors.join('; '));
+    }
+    render(parse(raw));
+  } catch (e) {
+    showError(e.message);
+    txt('updatedLabel', 'Error — tap ↻ to retry');
+  } finally {
+    if (btn) btn.classList.remove('spinning');
+  }
+}
+
+function startLoop() {
+  clearInterval(refreshTimer);
+  refresh();
+  refreshTimer = setInterval(refresh, 15 * 60 * 1000);
+}
+
+/* ─────────────────────────────────────────────
+   WIRE BUTTONS
+───────────────────────────────────────────── */
+document.getElementById('connectBtn').addEventListener('click', startAuth);
+document.getElementById('refreshBtn').addEventListener('click', refresh);
+document.getElementById('disconnectBtn').addEventListener('click', disconnect);
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+function showConnected() {
+  document.getElementById('setupCard').style.display     = 'none';
+  document.getElementById('connectedView').style.display = '';
+  const cached = localStorage.getItem(LS_CACHE);
+  if (cached) {
+    try { const { d } = JSON.parse(cached); if (d) render(d); } catch {}
+  }
+}
+
+function showSetup() {
+  document.getElementById('setupCard').style.display     = '';
+  document.getElementById('connectedView').style.display = 'none';
+  setStatus('');
+}
+
+// Handle OAuth redirect (token in URL hash) and error query param
+const gotToken = handleHashTokens();
+handleQueryError();
+
+// Push new token to KV immediately so other devices pick it up
+if (gotToken) syncTokenToKV(getToken(), getExpiry());
+
+if (isTokenValid()) {
+  showConnected();
+  startLoop();
+} else if (gotToken) {
+  startLoop();
+} else {
+  // No local token — try cross-device sync from Vercel KV before showing setup
+  setStatus('Checking sync…');
+  tryLoadFromKV().then(found => {
+    setStatus('');
+    if (found && isTokenValid()) {
+      showConnected();
+      startLoop();
+    } else {
+      showSetup();
+    }
+  });
+}
+
+})();
+</script>
+<script src="themes.js"></script>
+</body>
+</html>
+

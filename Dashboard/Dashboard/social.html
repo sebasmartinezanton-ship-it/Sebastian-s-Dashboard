@@ -1,0 +1,909 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06080f">
+<meta name="color-scheme" content="dark">
+<title>Social Media</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="theme.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --text-primary:   #FAFAFA;
+  --text-secondary: #B8B6B0;
+  --text-tertiary:  #76746E;
+  --success: #6BE3A4;
+  --warning: #F2C063;
+  --danger:  #FF6B6B;
+  --font-body: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --yt:  #EF4444;
+  --tt:  #2DD4BF;
+  --ig:  #D946EF;
+}
+
+body {
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding: max(24px, env(safe-area-inset-top)) 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  filter: blur(40px);
+  animation: bgDrift 36s ease-in-out infinite alternate;
+  pointer-events: none; z-index: 0;
+}
+@keyframes bgDrift {
+  0%   { transform: translate(0,0) scale(1); }
+  50%  { transform: translate(10px,-6px) scale(1.03); }
+  100% { transform: translate(-6px,8px) scale(0.98); }
+}
+
+.page-wrap { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+
+/* ── Page header ──────────────────────────────────────── */
+.day-pill {
+  display: inline-flex; align-items: center;
+  padding: 5px 12px; border-radius: 999px; margin-bottom: 8px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary);
+}
+.page-title {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.025em;
+  background: linear-gradient(180deg, #FFFFFF 0%, #C7C4BC 120%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; margin-bottom: 24px;
+}
+.section-title {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text-tertiary);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 14px; margin-top: 26px;
+}
+.section-title-left { display: flex; align-items: center; gap: 12px; }
+.section-title-left::before {
+  content: ''; width: 18px; height: 1px;
+  background: var(--text-tertiary); opacity: 0.6; flex-shrink: 0;
+}
+.section-title-left::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,.08), transparent);
+}
+.glass-card {
+  background: rgba(15,23,42,0.40);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; padding: 18px 20px; margin-bottom: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.04);
+  position: relative; overflow: hidden;
+}
+.glass-card::before {
+  content: '';
+  position: absolute; top: 0; left: 14px; right: 14px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  pointer-events: none;
+}
+
+/* ── Small action button ──────────────────────────────── */
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 8px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary); font-family: var(--font-body);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.09); color: var(--text-primary); }
+.btn-ghost.active {
+  background: rgba(99,102,241,0.18); border-color: rgba(99,102,241,0.40);
+  color: #a5b4fc;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION A: AUDIENCE OVERVIEW
+   ═══════════════════════════════════════════════════════ */
+.audience-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+}
+@media (max-width: 560px) { .audience-grid { grid-template-columns: 1fr; } }
+
+.platform-card {
+  border-radius: 16px; padding: 16px 18px;
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: border-color 0.2s;
+}
+.platform-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: var(--pc-glow); opacity: 0.08;
+  pointer-events: none;
+}
+.platform-card.yt  { background: rgba(15,23,42,0.55); --pc-glow: radial-gradient(circle at 80% 0%, var(--yt), transparent 65%); }
+.platform-card.tt  { background: rgba(15,23,42,0.55); --pc-glow: radial-gradient(circle at 80% 0%, var(--tt), transparent 65%); }
+.platform-card.ig  { background: rgba(15,23,42,0.55); --pc-glow: radial-gradient(circle at 80% 0%, var(--ig), transparent 65%); }
+
+.platform-card:hover { border-color: rgba(255,255,255,0.12); }
+
+.pc-icon {
+  font-size: 20px; margin-bottom: 10px; display: block;
+  filter: drop-shadow(0 0 6px var(--pc-accent));
+}
+.platform-card.yt  { --pc-accent: var(--yt); }
+.platform-card.tt  { --pc-accent: var(--tt); }
+.platform-card.ig  { --pc-accent: var(--ig); }
+
+.pc-name {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--text-tertiary);
+  font-family: var(--font-mono); margin-bottom: 6px;
+}
+.pc-count {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums; color: var(--text-primary); line-height: 1;
+}
+.pc-count-edit {
+  width: 100%; font-size: 22px; font-weight: 700;
+  background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px; color: var(--text-primary); font-family: var(--font-mono);
+  padding: 6px 10px; outline: none; font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.pc-count-edit::-webkit-outer-spin-button,
+.pc-count-edit::-webkit-inner-spin-button { -webkit-appearance: none; }
+.pc-count-edit:focus { border-color: var(--pc-accent); box-shadow: 0 0 0 2px rgba(99,102,241,0.12); }
+
+.pc-metric {
+  font-size: 10px; color: var(--text-tertiary); margin-top: 2px; margin-bottom: 10px;
+  font-family: var(--font-mono);
+}
+.pc-goal-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 10px; margin-bottom: 5px; font-family: var(--font-mono);
+}
+.pc-goal-label { color: var(--text-tertiary); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.pc-goal-val   { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.pc-goal-edit  {
+  width: 80px; font-size: 11px; font-weight: 700;
+  background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 6px; color: var(--text-secondary); font-family: var(--font-mono);
+  padding: 3px 7px; outline: none; text-align: right; font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.pc-goal-edit::-webkit-outer-spin-button,
+.pc-goal-edit::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.pc-bar-track {
+  height: 5px; border-radius: 3px;
+  background: rgba(255,255,255,0.06); overflow: hidden; margin-bottom: 6px;
+}
+.pc-bar-fill {
+  height: 100%; border-radius: 3px;
+  transition: width 0.5s cubic-bezier(.22,1,.36,1);
+}
+.platform-card.yt .pc-bar-fill { background: var(--yt); box-shadow: 0 0 8px rgba(239,68,68,.5); }
+.platform-card.tt .pc-bar-fill { background: var(--tt); box-shadow: 0 0 8px rgba(45,212,191,.5); }
+.platform-card.ig .pc-bar-fill { background: var(--ig); box-shadow: 0 0 8px rgba(217,70,239,.5); }
+
+.pc-pct {
+  font-size: 10px; font-weight: 700; font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.platform-card.yt .pc-pct { color: var(--yt); }
+.platform-card.tt .pc-pct { color: var(--tt); }
+.platform-card.ig .pc-pct { color: var(--ig); }
+
+/* ═══════════════════════════════════════════════════════
+   SECTION B: POSTING SCHEDULE
+   ═══════════════════════════════════════════════════════ */
+.schedule-list { display: flex; flex-direction: column; gap: 6px; }
+
+.sched-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  transition: background 0.15s, opacity 0.2s;
+}
+.sched-item:hover { background: rgba(255,255,255,0.055); }
+.sched-item.is-done {
+  opacity: 0.5;
+}
+.sched-item.is-done .sched-text {
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,255,255,0.3);
+  color: var(--text-tertiary);
+}
+
+/* Custom checkbox */
+.sched-cb-wrap { position: relative; width: 22px; height: 22px; flex-shrink: 0; cursor: pointer; }
+.sched-cb-wrap input { position: absolute; opacity: 0; width: 0; height: 0; }
+.sched-cb-box {
+  width: 22px; height: 22px; border-radius: 7px;
+  border: 1.5px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.04);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.sched-cb-wrap input:checked + .sched-cb-box {
+  background: #6BE3A4; border-color: #6BE3A4;
+  box-shadow: 0 0 12px rgba(107,227,164,0.45);
+}
+.sched-cb-box::after {
+  content: '';
+  width: 11px; height: 7px;
+  border-left: 2px solid #050506;
+  border-bottom: 2px solid #050506;
+  transform: rotate(-45deg) scale(0);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  margin-top: -2px;
+}
+.sched-cb-wrap input:checked + .sched-cb-box::after { transform: rotate(-45deg) scale(1); }
+
+.sched-day {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase; font-family: var(--font-mono);
+  padding: 3px 8px; border-radius: 999px; flex-shrink: 0;
+  white-space: nowrap;
+}
+.day-mon { background: rgba(99,102,241,0.15); color: #818cf8; }
+.day-tue { background: rgba(45,212,191,0.12); color: #5eead4; }
+.day-wed { background: rgba(107,227,164,0.12); color: #6BE3A4; }
+.day-thu { background: rgba(242,192,99,0.12);  color: #F2C063; }
+.day-fri { background: rgba(249,115,22,0.12);  color: #fb923c; }
+.day-sat { background: rgba(217,70,239,0.12);  color: #e879f9; }
+.day-sun { background: rgba(239,68,68,0.12);   color: #f87171; }
+
+.sched-text {
+  flex: 1; font-size: 14px; color: var(--text-primary);
+  font-weight: 500; min-width: 0;
+}
+.sched-text-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-family: var(--font-body);
+  font-size: 14px; font-weight: 500; min-width: 0;
+}
+.sched-delete {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-tertiary); font-size: 16px; padding: 2px 6px;
+  border-radius: 6px; opacity: 0.5; flex-shrink: 0;
+  transition: color 0.15s, opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sched-item:hover .sched-delete { opacity: 1; }
+.sched-delete:hover { color: var(--danger); }
+
+/* Add row */
+.add-row {
+  display: flex; gap: 8px; align-items: stretch;
+  margin-top: 10px; padding: 4px;
+  background: rgba(0,0,0,0.25); border-radius: 12px;
+}
+.add-row-select, .add-row-input {
+  background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-family: var(--font-body);
+  font-size: 13px; padding: 9px 12px;
+}
+.add-row-select {
+  border-right: 1px solid rgba(255,255,255,0.06);
+  font-weight: 600; cursor: pointer; color-scheme: dark; flex-shrink: 0;
+  background: rgba(255,255,255,0.04); border-radius: 9px; margin: 2px;
+}
+.add-row-input { flex: 1; }
+.add-row-input::placeholder { color: var(--text-tertiary); }
+.add-row-btn {
+  padding: 0 16px; border: none; border-radius: 9px; margin: 2px;
+  background: rgba(99,102,241,0.20); color: #a5b4fc;
+  font-size: 18px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+  transition: background 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.add-row-btn:hover { background: rgba(99,102,241,0.32); box-shadow: 0 0 16px rgba(99,102,241,0.25); }
+.add-row-btn:active { transform: scale(0.95); }
+
+/* ═══════════════════════════════════════════════════════
+   SECTION C: CONTENT IDEA BOARD
+   ═══════════════════════════════════════════════════════ */
+.idea-add-wrap {
+  display: flex; gap: 8px; align-items: stretch;
+  margin-bottom: 14px; padding: 4px;
+  background: rgba(0,0,0,0.25); border-radius: 12px;
+}
+.idea-add-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-family: var(--font-body);
+  font-size: 14px; padding: 10px 12px; min-width: 0;
+}
+.idea-add-input::placeholder { color: var(--text-tertiary); }
+.idea-add-btn {
+  padding: 0 18px; border: none; border-radius: 9px; margin: 2px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(217,70,239,0.20));
+  color: #c084fc; font-size: 18px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+  transition: background 0.15s, box-shadow 0.15s;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  -webkit-tap-highlight-color: transparent;
+}
+.idea-add-btn:hover {
+  background: linear-gradient(135deg, rgba(99,102,241,0.38), rgba(217,70,239,0.30));
+  box-shadow: 0 0 20px rgba(192,132,252,0.25);
+}
+
+/* Idea cards */
+.idea-section-lbl {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-tertiary); font-family: var(--font-mono);
+  padding: 0 2px; margin-bottom: 8px; margin-top: 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.idea-section-lbl::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.06), transparent);
+}
+.idea-board { display: flex; flex-direction: column; gap: 8px; }
+
+.idea-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 13px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  transition: background 0.15s;
+  position: relative; overflow: hidden;
+}
+.idea-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, #818cf8, #c084fc);
+  border-radius: 0;
+  opacity: 0.7;
+}
+.idea-card.is-filmed::before { background: var(--success); }
+.idea-card:hover { background: rgba(255,255,255,0.055); }
+.idea-card.is-filmed { opacity: 0.5; }
+.idea-card.is-filmed .idea-text {
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,255,255,0.3);
+  color: var(--text-tertiary);
+}
+
+/* Idea circle toggle */
+.idea-toggle {
+  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+  border: 2px solid rgba(255,255,255,0.20); cursor: pointer;
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.idea-toggle:hover { border-color: rgba(107,227,164,0.6); }
+.idea-toggle.filmed {
+  background: var(--success); border-color: var(--success);
+  box-shadow: 0 0 10px rgba(107,227,164,0.4);
+}
+.idea-toggle.filmed::after {
+  content: '';
+  width: 8px; height: 5px;
+  border-left: 2px solid #050506;
+  border-bottom: 2px solid #050506;
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+.idea-text {
+  flex: 1; font-size: 14px; color: var(--text-primary);
+  font-weight: 500; line-height: 1.5; min-width: 0;
+  word-break: break-word;
+}
+.idea-platform-tag {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.10em;
+  padding: 2px 7px; border-radius: 999px; margin-left: 6px;
+  background: rgba(99,102,241,0.12); color: #818cf8;
+  font-family: var(--font-mono); text-transform: uppercase; white-space: nowrap;
+  flex-shrink: 0;
+}
+.idea-delete {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-tertiary); font-size: 16px; padding: 2px 6px;
+  border-radius: 6px; opacity: 0.4; flex-shrink: 0;
+  transition: color 0.15s, opacity 0.15s; line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.idea-card:hover .idea-delete { opacity: 1; }
+.idea-delete:hover { color: var(--danger); }
+
+/* Empty state */
+.board-empty {
+  text-align: center; padding: 28px 0;
+  font-size: 12px; color: var(--text-tertiary); font-style: italic;
+}
+
+/* ── Stats row beneath audience ──────────────────────── */
+.stats-strip {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 8px; margin-top: 10px;
+}
+@media (max-width: 500px) { .stats-strip { grid-template-columns: repeat(2,1fr); } }
+.stat-mini {
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.stat-mini-label {
+  font-size: 8px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-tertiary); font-family: var(--font-mono);
+}
+.stat-mini-val {
+  font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--text-primary); font-family: var(--font-mono);
+}
+.stat-mini-val.up   { color: var(--success); }
+.stat-mini-val.down { color: var(--danger); }
+</style>
+  <link rel="stylesheet" href="themes.css">
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div class="day-pill" id="dayPill">—</div>
+  <h1 class="page-title">Social Media</h1>
+
+  <!-- ═══════ SECTION A: AUDIENCE OVERVIEW ═══════ -->
+  <div class="section-title">
+    <div class="section-title-left">Audience Overview</div>
+    <button class="btn-ghost" id="editMetricsBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit Goals
+    </button>
+  </div>
+
+  <div class="audience-grid" id="audienceGrid"></div>
+
+  <div class="stats-strip" id="statsStrip"></div>
+
+  <!-- ═══════ SECTION B: POSTING SCHEDULE ═══════ -->
+  <div class="section-title">
+    <div class="section-title-left">Weekly Posting Schedule</div>
+    <span id="schedDoneCount" style="font-size:10px;color:var(--text-tertiary);font-family:var(--font-mono);font-weight:700"></span>
+  </div>
+
+  <div class="glass-card">
+    <div class="schedule-list" id="scheduleList"></div>
+    <div class="add-row" id="schedAddRow">
+      <select class="add-row-select" id="schedDaySelect">
+        <option value="mon">Mon</option>
+        <option value="tue">Tue</option>
+        <option value="wed">Wed</option>
+        <option value="thu">Thu</option>
+        <option value="fri">Fri</option>
+        <option value="sat">Sat</option>
+        <option value="sun">Sun</option>
+      </select>
+      <input type="text" class="add-row-input" id="schedInput" placeholder="Add a posting target…" maxlength="120">
+      <button class="add-row-btn" id="schedAddBtn" title="Add">+</button>
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION C: CONTENT IDEA BOARD ═══════ -->
+  <div class="section-title">
+    <div class="section-title-left">Content Idea Board</div>
+    <span id="ideaCount" style="font-size:10px;color:var(--text-tertiary);font-family:var(--font-mono);font-weight:700"></span>
+  </div>
+
+  <div class="glass-card">
+    <div class="idea-add-wrap">
+      <input type="text" class="idea-add-input" id="ideaInput" placeholder="Drop a new content idea here… press Enter to add" maxlength="200">
+      <button class="idea-add-btn" id="ideaAddBtn" title="Add idea">+</button>
+    </div>
+
+    <div id="ideaActiveSection">
+      <div class="idea-section-lbl">In the pipeline</div>
+      <div class="idea-board" id="ideaActiveBoard"></div>
+      <div class="board-empty" id="ideaActiveEmpty" style="display:none">No ideas yet — add one above.</div>
+    </div>
+
+    <div id="ideaFilmedSection" style="margin-top:18px;display:none">
+      <div class="idea-section-lbl" style="color:var(--success)">Filmed ✓</div>
+      <div class="idea-board" id="ideaFilmedBoard"></div>
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script src="topbar.js" defer></script>
+<nav class="tabbar" role="navigation" aria-label="Main navigation">
+  <div class="tabbar-inner">
+    <a href="index.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      <span class="tab-label">Dashboard</span>
+    </a>
+    <a href="nutrition.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="8"/><line x1="10" y1="2" x2="10" y2="8"/><line x1="14" y1="2" x2="14" y2="8"/></svg></span>
+      <span class="tab-label">Nutrition</span>
+    </a>
+    <a href="gym.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="12" x2="18" y2="12"/><line x1="6" y1="8" x2="6" y2="16"/><line x1="18" y1="8" x2="18" y2="16"/><line x1="3" y1="9" x2="3" y2="15"/><line x1="21" y1="9" x2="21" y2="15"/></svg></span>
+      <span class="tab-label">Gym</span>
+    </a>
+    <a href="finance.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
+      <span class="tab-label">Finances</span>
+    </a>
+    <a href="social.html" class="tab" aria-current="page">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      <span class="tab-label">Social</span>
+    </a>
+    <a href="hygiene.html" class="tab">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      <span class="tab-label">Hygiene</span>
+    </a>
+  </div>
+</nav>
+
+<script>
+(function () {
+'use strict';
+
+/* ─────────────────────────────────────────────────
+   STORAGE
+───────────────────────────────────────────────── */
+function ls(key, val) {
+  if (val === undefined) {
+    try { const r = localStorage.getItem(key); return r == null ? null : JSON.parse(r); } catch { return null; }
+  }
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+
+function uid() { return '_' + Date.now() + '_' + Math.floor(Math.random() * 99999); }
+
+/* ─────────────────────────────────────────────────
+   DATE PILL
+───────────────────────────────────────────────── */
+(function renderDayPill() {
+  const d = new Date();
+  const DAYS  = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('dayPill').textContent =
+    DAYS[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate();
+})();
+
+/* ─────────────────────────────────────────────────
+   SECTION A — AUDIENCE OVERVIEW
+───────────────────────────────────────────────── */
+const AUD_KEY = 'social_audience';
+
+const AUD_DEFAULT = [
+  { id: 'yt',  cls: 'yt',  icon: '▶', name: 'YouTube',   metric: 'Subscribers', color: '#EF4444', count: 1240, goal: 10000 },
+  { id: 'tt',  cls: 'tt',  icon: '♪', name: 'TikTok',    metric: 'Followers',   color: '#2DD4BF', count: 4520, goal: 50000 },
+  { id: 'ig',  cls: 'ig',  icon: '◎', name: 'Instagram', metric: 'Followers',   color: '#D946EF', count: 2840, goal: 25000 },
+];
+
+function loadAudience() {
+  const stored = ls(AUD_KEY);
+  if (stored && Array.isArray(stored) && stored.length === 3) return stored;
+  const fresh = AUD_DEFAULT.map(p => Object.assign({}, p));
+  ls(AUD_KEY, fresh);
+  return fresh;
+}
+function saveAudience(arr) { ls(AUD_KEY, arr); }
+
+function fmtK(n) {
+  n = Number(n) || 0;
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/,'') + 'M';
+  if (n >= 1000)    return (n / 1000).toFixed(1).replace(/\.0$/,'') + 'K';
+  return n.toLocaleString('en-US');
+}
+
+let editMode = false;
+
+function renderAudience() {
+  const platforms = loadAudience();
+  const grid = document.getElementById('audienceGrid');
+  const strip = document.getElementById('statsStrip');
+  const btn  = document.getElementById('editMetricsBtn');
+  btn.classList.toggle('active', editMode);
+  btn.innerHTML = editMode
+    ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Save'
+    : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Goals';
+
+  grid.innerHTML = platforms.map((p, idx) => {
+    const pct = Math.min(100, p.goal > 0 ? Math.round(p.count / p.goal * 100) : 0);
+    return `
+      <div class="platform-card ${p.cls}">
+        <span class="pc-icon">${p.icon}</span>
+        <div class="pc-name">${p.name}</div>
+        ${editMode
+          ? `<input type="number" class="pc-count-edit" value="${p.count}" data-idx="${idx}" data-field="count" min="0" step="1" aria-label="${p.name} count">`
+          : `<div class="pc-count">${fmtK(p.count)}</div>`
+        }
+        <div class="pc-metric">${p.metric}</div>
+        <div class="pc-goal-row">
+          <span class="pc-goal-label">Goal</span>
+          ${editMode
+            ? `<input type="number" class="pc-goal-edit" value="${p.goal}" data-idx="${idx}" data-field="goal" min="0" step="100" aria-label="${p.name} goal">`
+            : `<span class="pc-goal-val">${fmtK(p.goal)}</span>`
+          }
+        </div>
+        <div class="pc-bar-track">
+          <div class="pc-bar-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="pc-pct">${pct}% to goal</div>
+      </div>`;
+  }).join('');
+
+  // Wire edit inputs
+  grid.querySelectorAll('.pc-count-edit, .pc-goal-edit').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const arr = loadAudience();
+      const i = parseInt(inp.dataset.idx, 10);
+      const val = parseInt(inp.value, 10) || 0;
+      arr[i][inp.dataset.field] = Math.max(0, val);
+      saveAudience(arr);
+      // Live-update bar + pct
+      const card = inp.closest('.platform-card');
+      const p = arr[i];
+      const pct = Math.min(100, p.goal > 0 ? Math.round(p.count / p.goal * 100) : 0);
+      const bar = card.querySelector('.pc-bar-fill');
+      const pctEl = card.querySelector('.pc-pct');
+      if (bar) bar.style.width = pct + '%';
+      if (pctEl) pctEl.textContent = pct + '% to goal';
+      renderStatsStrip(arr);
+    });
+  });
+
+  renderStatsStrip(platforms);
+}
+
+function renderStatsStrip(platforms) {
+  const strip = document.getElementById('statsStrip');
+  const totalCount = platforms.reduce((s, p) => s + (Number(p.count) || 0), 0);
+  const totalGoal  = platforms.reduce((s, p) => s + (Number(p.goal)  || 0), 0);
+  const closestPct = platforms.reduce((best, p) => {
+    const pct = p.goal > 0 ? p.count / p.goal * 100 : 0;
+    return pct > best ? pct : best;
+  }, 0);
+  const platforms50 = platforms.filter(p => p.goal > 0 && p.count / p.goal >= 0.5).length;
+  strip.innerHTML = `
+    <div class="stat-mini">
+      <div class="stat-mini-label">Total Reach</div>
+      <div class="stat-mini-val">${fmtK(totalCount)}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-label">Combined Goal</div>
+      <div class="stat-mini-val">${fmtK(totalGoal)}</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-label">Best Progress</div>
+      <div class="stat-mini-val up">${Math.round(closestPct)}%</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-label">50%+ goals</div>
+      <div class="stat-mini-val ${platforms50 > 0 ? 'up' : ''}">${platforms50} / ${platforms.length}</div>
+    </div>`;
+}
+
+document.getElementById('editMetricsBtn').addEventListener('click', () => {
+  if (editMode) {
+    // Collect final values from inputs before leaving edit mode
+    const arr = loadAudience();
+    document.querySelectorAll('.pc-count-edit, .pc-goal-edit').forEach(inp => {
+      const i = parseInt(inp.dataset.idx, 10);
+      const val = parseInt(inp.value, 10) || 0;
+      arr[i][inp.dataset.field] = Math.max(0, val);
+    });
+    saveAudience(arr);
+  }
+  editMode = !editMode;
+  renderAudience();
+});
+
+/* ─────────────────────────────────────────────────
+   SECTION B — POSTING SCHEDULE
+───────────────────────────────────────────────── */
+const SCHED_KEY = 'social_schedule';
+const DAY_ORDER = ['mon','tue','wed','thu','fri','sat','sun'];
+const DAY_LABELS = { mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun' };
+
+const SCHED_DEFAULT = [
+  { id: uid(), day: 'mon', text: 'Upload gym transformation vlog', done: false },
+  { id: uid(), day: 'wed', text: 'Post TikTok workout clip',       done: false },
+  { id: uid(), day: 'thu', text: 'Instagram carousel + Reel',      done: false },
+  { id: uid(), day: 'sat', text: 'YouTube weekly vlog',            done: false },
+  { id: uid(), day: 'sun', text: 'TikTok + IG story batch',        done: false },
+];
+
+function loadSched() {
+  const stored = ls(SCHED_KEY);
+  if (stored && Array.isArray(stored) && stored.length) return stored;
+  const fresh = SCHED_DEFAULT.map(s => Object.assign({}, s, { id: uid() }));
+  ls(SCHED_KEY, fresh);
+  return fresh;
+}
+function saveSched(arr) { ls(SCHED_KEY, arr); }
+
+function renderSchedule() {
+  const items = loadSched();
+  const list  = document.getElementById('scheduleList');
+  const count = document.getElementById('schedDoneCount');
+  const done  = items.filter(i => i.done).length;
+  count.textContent = done + ' / ' + items.length + ' done';
+
+  // Sort by day order
+  const sorted = items.slice().sort((a, b) =>
+    DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day)
+  );
+
+  list.innerHTML = '';
+  sorted.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'sched-item' + (item.done ? ' is-done' : '');
+    row.innerHTML = `
+      <label class="sched-cb-wrap">
+        <input type="checkbox" ${item.done ? 'checked' : ''} data-id="${item.id}">
+        <span class="sched-cb-box"></span>
+      </label>
+      <span class="sched-day day-${item.day}">${DAY_LABELS[item.day]}</span>
+      <span class="sched-text">${escHtml(item.text)}</span>
+      <button class="sched-delete" data-id="${item.id}" title="Delete">×</button>`;
+
+    // Checkbox
+    row.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+      const arr = loadSched();
+      const it  = arr.find(x => x.id === e.target.dataset.id);
+      if (it) it.done = e.target.checked;
+      saveSched(arr);
+      renderSchedule();
+    });
+
+    // Delete
+    row.querySelector('.sched-delete').addEventListener('click', (e) => {
+      const arr = loadSched().filter(x => x.id !== e.currentTarget.dataset.id);
+      saveSched(arr);
+      renderSchedule();
+    });
+
+    list.appendChild(row);
+  });
+}
+
+function schedAdd() {
+  const dayEl = document.getElementById('schedDaySelect');
+  const inp   = document.getElementById('schedInput');
+  const text  = inp.value.trim();
+  if (!text) { inp.focus(); return; }
+  const arr   = loadSched();
+  arr.push({ id: uid(), day: dayEl.value, text, done: false });
+  saveSched(arr);
+  inp.value = '';
+  renderSchedule();
+  inp.focus();
+}
+
+document.getElementById('schedAddBtn').addEventListener('click', schedAdd);
+document.getElementById('schedInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); schedAdd(); }
+});
+
+/* ─────────────────────────────────────────────────
+   SECTION C — CONTENT IDEA BOARD
+───────────────────────────────────────────────── */
+const IDEA_KEY = 'social_ideas';
+
+const IDEA_DEFAULT = [
+  { id: uid(), text: 'Day X of getting a Gymshark sponsorship series',                       filmed: false },
+  { id: uid(), text: 'Testing high-performance pickleball paddles for the automated TikTok Shop', filmed: false },
+  { id: uid(), text: 'Vouch dating app development vlog',                                    filmed: false },
+];
+
+function loadIdeas() {
+  const stored = ls(IDEA_KEY);
+  if (stored && Array.isArray(stored) && stored.length) return stored;
+  const fresh = IDEA_DEFAULT.map(i => Object.assign({}, i, { id: uid() }));
+  ls(IDEA_KEY, fresh);
+  return fresh;
+}
+function saveIdeas(arr) { ls(IDEA_KEY, arr); }
+
+function renderIdeas() {
+  const ideas  = loadIdeas();
+  const active = ideas.filter(i => !i.filmed);
+  const filmed = ideas.filter(i => i.filmed);
+
+  document.getElementById('ideaCount').textContent =
+    active.length + ' active · ' + filmed.length + ' filmed';
+
+  renderIdeaBoard('ideaActiveBoard', 'ideaActiveEmpty', active, ideas);
+  const filmSection = document.getElementById('ideaFilmedSection');
+  filmSection.style.display = filmed.length ? '' : 'none';
+  if (filmed.length) renderIdeaBoard('ideaFilmedBoard', null, filmed, ideas);
+}
+
+function renderIdeaBoard(boardId, emptyId, subset, allIdeas) {
+  const board = document.getElementById(boardId);
+  board.innerHTML = '';
+  if (emptyId) {
+    document.getElementById(emptyId).style.display = subset.length ? 'none' : '';
+  }
+  subset.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'idea-card' + (item.filmed ? ' is-filmed' : '');
+    card.innerHTML = `
+      <button class="idea-toggle ${item.filmed ? 'filmed' : ''}" data-id="${item.id}" title="${item.filmed ? 'Mark as not filmed' : 'Mark as filmed'}"></button>
+      <span class="idea-text">${escHtml(item.text)}</span>
+      <button class="idea-delete" data-id="${item.id}" title="Delete idea">×</button>`;
+
+    // Toggle filmed
+    card.querySelector('.idea-toggle').addEventListener('click', () => {
+      const arr = loadIdeas();
+      const it  = arr.find(x => x.id === item.id);
+      if (it) it.filmed = !it.filmed;
+      saveIdeas(arr);
+      renderIdeas();
+    });
+
+    // Delete
+    card.querySelector('.idea-delete').addEventListener('click', () => {
+      const arr = loadIdeas().filter(x => x.id !== item.id);
+      saveIdeas(arr);
+      renderIdeas();
+    });
+
+    board.appendChild(card);
+  });
+}
+
+function ideaAdd() {
+  const inp  = document.getElementById('ideaInput');
+  const text = inp.value.trim();
+  if (!text) { inp.focus(); return; }
+  const arr = loadIdeas();
+  arr.unshift({ id: uid(), text, filmed: false });
+  saveIdeas(arr);
+  inp.value = '';
+  renderIdeas();
+  inp.focus();
+}
+
+document.getElementById('ideaAddBtn').addEventListener('click', ideaAdd);
+document.getElementById('ideaInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); ideaAdd(); }
+});
+
+/* ─────────────────────────────────────────────────
+   UTILITY
+───────────────────────────────────────────────── */
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ─────────────────────────────────────────────────
+   BOOT
+───────────────────────────────────────────────── */
+renderAudience();
+renderSchedule();
+renderIdeas();
+
+})();
+</script>
+<script src="themes.js"></script>
+</body>
+</html>
+
